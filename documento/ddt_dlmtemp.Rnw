@@ -290,6 +290,7 @@ data.frame(t,y,theta,m=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %>%
 \subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
 %\texorpdfstring
 
+
 El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
 Lo primero es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros, 
@@ -356,6 +357,19 @@ El objeto \verb|Tn.filter$m| tendrá la estimación.
 % Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter|) para obtener estimaciones de la esperanza \textit{a posteriori}:\\
 % \verb|Tn.filter <- dlmFilter(y,parMLE(mod$par))|
  
+El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de 
+
+Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
+
+Lo primero es estimar la varianza observacional con la función \verb|dlmMLE|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE|), cuyo argumento sea un valor inicial propuesto para el parámetro, que retorne un objeto de la clase \verb|dlm|, en este caso de la familia de modelos trigonométricos, donde la frecuencia es 365. Le especificamos que mantenga 2 armónicos y descarte el resto:\\
+\verb|parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = par, dW = 0)|
+
+La función \verb|dlmMLE| devolverá el modelo, con el/los parámetros estimados:\\
+\verb|mod<- dlmMLE(y,parm = 16,build= parMLE)|
+
+Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter|) para obtener estimaciones de la esperanza \textit{a posteriori}:\\
+\verb|Tn.filter <- dlmFilter(y,parMLE(mod$par))|
+
 En la figura \ref{fig:graf6} se muestra en un período de tres años, las series de mínima y máxima y la estimación de su valor esperado mediante el filtro de Kalman.
 
 \section{Resultados}
