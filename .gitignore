@@ -2,4 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
+
+
 *.Rproj
+
+*.log
+*.lot
+*.gz
+*.toc
+documento/cache/*
