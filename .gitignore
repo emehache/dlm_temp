@@ -11,3 +11,4 @@
 *.gz
 *.toc
 documento/cache/*
+*concordance.tex
