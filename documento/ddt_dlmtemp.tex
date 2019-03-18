@@ -340,15 +340,18 @@ Aparte de DLM, la familia de modelos espacio-estados admite modelos no lineales 
 %\end{center}
 
 \subsection{Estimacion del proceso de estados}
-\textcolor{blue}{
-\begin{itemize}
-  \item objetivos y distribuciones de interes posibles: filter, smooth, forecast
-  \item a nosotros no deberia interesarnos mas smoothing que filtering ??? 
-  \item comentar efecto de datos faltantes en este tipo de modelos
-\end{itemize}
-}
 
-Si se tiene las observaciones $y_1,\dots,y_T$, puede ser de interés obtener una estimación de $\E(\theta_t | y_1,\dots,y_t)$, es decir, el valor esperado del proceso que subyace a las observaciones en tiempo $t$, dado que tenemos las observaciones pasadas. Esta cantidad es estimada mediante el Filtro de Kalman.
+Si se tienen las observaciones $y_1,\dots,y_T$, y se asume un modelo como el descripto por las ecuaciones \eqref{ecu.obs} y \eqref{ecu.evo}, hay varias distribuciones posteriores que puede ser de interes. En relacion al proceso no observable se distinguen tres distribuciones relevantes condicional en los datos observados: filtrada, suavisada y de prediccion. 
+
+La \textbf{distribucion filtrada} (filtering distribution en ingles) consiste en la distribucion posteiror del estado no observable $\theta_t$ dada la informacion observada hasta ese mismo momento, es decir $p(\theta_t | y_1, \ldots, y_t)$, se tiene una distribucion para cada momento $t$. La posterior filtrada es de principal interes en aplicaciones secuenciales donde es necesario realizar una nueva estimacion para cada observacion nueva. En el caso de modelos DLM, donde operan las restricciones de normalidad y linealidad, es posible tener soluciones cerradas para $p(\theta_t | y_1, \ldots, y_t)$ mediante el Filtro de Kalman (REF??) \textcolor{blue}{es necesario incluir las formulas de recursion para estimar esto??}
+
+Una segunda distribucion posterior que puede tener relevancia en aplicaciones es la \textbf{distribucion suavizada} (smoothing distribution en ingles) del proceso de estados. La distribucion suavizada consiste en $p(\theta_t | y_1, \ldots, y_T)$, es similar a la posterior filtrada con la diferencia que el condicional se realiza sobre todos los datos observados disponibles. La distribucion suavizada es relevante para aplicaciones donde estamos interesados en un estudio retrospectivo y se desea analizar todo el proceso de estados latente. \textcolor{blue}{a nosotros no deberia interesarnos mas smoothing que filtering ???}
+
+\textcolor{blue}{estimacion de los parametros de varianza? MLE.. otra forma?}
+
+En caso que estemos interesados en predecir un valor futuro del estado se utilizan distribuciones de prediccion $p(\theta_{t+k} | y_1, \ldots, y_t)$. \textcolor{blue}{expandir y comentar sobre predictiva de observaciones}
+
+\textcolor{blue}{Incluir tratamiento de datos faltantes, caapz que para que se entienda son necesarias incluir formulas para calcular filtering y smoothing}
 
 
 \subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
