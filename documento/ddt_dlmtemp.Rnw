@@ -373,6 +373,7 @@ y <- ts(y)
 parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])
 modPoly <- dlmMLE(y,parm = c(1,1),build = parMLE)
 mod_filter <- dlmFilter(y, parMLE(modPoly$par))
+mod_smooth <- dlmSmooth(mod_filter)
 #plot(t,theta,type="l")
 #lines(t,mod_filter$m[-1],col=2)
 @
@@ -386,6 +387,18 @@ data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %
   ggplot()+aes(x=t,y=valor,col=serie,alpha=tipo)+geom_line()+
   scale_alpha_discrete(range = c(.5,1),guide=F)+scale_color_manual(values=c("theta"='#F8766F',"y"='#7CAE00',"estimacion"="#9999CC"),guide=myguide)+theme_bw()
 @
+
+<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.">>=
+data.frame(t,y,theta, 
+           filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
+  gather(tipo, estimacion, filtro, suave, pred1) %>% 
+  gather( serie, valor, -t, -tipo ) %>% 
+  ggplot(aes(x=t,y=valor,col=serie)) + geom_line() + 
+    facet_grid(~tipo) +
+  scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
+  theme_bw()
+@
+
 
 % \vspace{-.75em}
 % \captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado y su estimación. %En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.
