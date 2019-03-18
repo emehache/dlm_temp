@@ -210,23 +210,19 @@ La figura \ref{fig:graf1} muestra las series de temperaturas para el año 2012 (
 # ------------------------
 # Buen dibujo !!! 
 # la misma idea trate de mejorarlo ... a ver si te gusta
-plot1 <- d2 %>% mutate(dia2 = yday(fecha)) %>% 
+una.ola <- data.frame( serie = 'Tn', xn=156, xx=160, yn=-2, yx=20 ) %>% 
+  bind_rows( data.frame( serie = 'Tx', xn=156, xx=160, yn=5, yx=28 ) )
+
+d2 %>% mutate(dia2 = yday(fecha)) %>% 
   ggplot() + 
   geom_hex(aes(x=dia2, y=temp) ) +  
   geom_line(data = mutate(d1, dia2 = yday(fecha)),  aes(x=dia2,y=temp,group=serie)) +
-  annotate("rect", xmin=156, xmax=160, ymin=-4 , ymax=30, alpha=0.2, color=NA, fill="red") +
+  geom_rect( data = una.ola, 
+             aes(xmin=xn, xmax=xx, ymin=yn , ymax=yx), 
+             alpha=0.2, color=NA, fill="red") + 
   facet_grid(serie~., scales = 'free_y') +
   scale_fill_gradient(name='Frequence', high = '#034e7b', low = '#f1eef6') +
   theme_bw()
-
-d3 <- plot1$layers[[3]]$data
-d3 <- rbind(d3,d3)
-d3 <- cbind(d3,serie=c("Tn","Tx"))
-
-d3[1,3:4] <- c(-2,20)
-d3[2,3:4] <- c(5,28)
-plot1$layers[[3]]$data <- d3
-plot1
 @
 \textcolor{blue}{en la figura: caption con descripcion, nombres de los ejes y la etiqueta de color, nombres de los paneles}
 
