@@ -301,33 +301,29 @@ La principal consecuencia de la estructura de dependencia es que la distribucion
 p(\theta_{0:t}, y_{1:t}) =  p(\theta_0) \prod_{j=1}^t  p(\theta_j | \theta_{j-1})  p(y_j|\theta_j)
 \]
 
-La famillia de DLM es amplia y flexible, muchos modelos estadisticos para datos temporales pueden verse como casos partiulares de esta familia o de la clase mas general de modelos espacio-estados. En particular los modelos ARMA con ruido gaussiano son equivalentes a DLM cuando los parametros $F_t, G_t, V_t, W_t$ son constantes en el tiempo. Por ejemplo, el proceso  AR(2) $y_t = \phi_1 y_{t-1} + \phi_2 y_{t-2} + e_t$, puede ser visto como un DLM si definimos $\theta_t = 
+La famillia de DLM es amplia y flexible, muchos modelos estadisticos para datos temporales pueden verse como casos partiulares de esta familia o de la clase mas general de modelos espacio-estados. En particular los modelos ARMA con ruido gaussiano son equivalentes a DLM cuando los parametros $F_t, G_t, V_t, W_t$ son constantes en el tiempo. Por ejemplo, el proceso  AR(2): $y_t = \phi_1 y_{t-1} + \phi_2 y_{t-2} + e_t$, puede ser visto como un DLM si definimos $\theta_t = 
 \begin{pmatrix}
-y_t \\
-y_{t-1}
+\theta_{1,t} \\
+\theta_{2,t}
 \end{pmatrix}
 $
-entonces, tenemos que:  
+y luego, 
 
-\[ \begin{array}{ll}
+\[ \begin{array}{rl}
 y_t = & \begin{bmatrix}
 1 \\
 0
 \end{bmatrix}
-\theta_t \\
-\theta_t = &
-\begin{bmatrix}
-\phi_1 & \phi_2 \\
-1 & 0
-\end{bmatrix}
-\theta_{t-1}
+\theta_t = \theta_{1,t} \\
+& \\
+\theta_t = \begin{pmatrix} \theta_{1,t} \\ \theta_{2,t} \end{pmatrix} = &
+\begin{bmatrix} \phi_1 & 1 \\ \phi_2 & 0 \end{bmatrix}
+\begin{pmatrix} \theta_{1,t-1} \\ \theta_{2,t-1} \end{pmatrix}
 +
-\begin{bmatrix}
-e_t \\
-0
-\end{bmatrix}
+\begin{bmatrix} e_t \\ 0 \end{bmatrix}
 \end{array}
 \]
+para ver la equivalencia entre ambas representaciones, debemos operar en la segunda ecuación, que representa la evolución del proceso latente y verificar que se verifica que $\theta_{1,t} = \phi_1 \theta_{1,t-1} + \phi_2 \theta_{1,t-2} + e_t$. Ver CITA.LIBRO (sección 3.2.5) por más detalles en la correspondencia entre modelos ARIMA($p$, $d$, $q$) y DLM. 
 
 Aparte de DLM, la familia de modelos espacio-estados admite modelos no lineales y el uso de otras distribuciones no Gausianas. Por ejemplo, modelos para las distribuciones de la familia exponencial pueden ser especificados para tener DLMG \textit{generalizados}, por otro lado en casos uqe el proceso de estados tenga una distribucion discreta el modelo es referido como modelos ocultos de MArkov, tambien modelos de volatilidad estocastica pueden ser vistos como espacio-estados. El estudio de DLM entonces, es relevante pues permite introucirnos al trabajo con una familia de modelos que es muy amplica y puede aplicarse en una gran variedad de problemas concretos. 
 
@@ -354,9 +350,9 @@ En caso que estemos interesados en predecir un valor futuro del estado se utiliz
 \textcolor{blue}{Incluir tratamiento de datos faltantes, caapz que para que se entienda son necesarias incluir formulas para calcular filtering y smoothing}
 
 
-\subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
-
-La figura \ref{fig:graf7} muestra un ejemplo simulado de un proceso univariado concebido de esta forma, bajo el modelo descripto en \eqref{dlm_sim}. Así mismo, se muestra la estimación del proceso $\theta_t$ obtenida a través de la implementación del filtro de Kalman en \textbf{R}.
+\subsection{Un ejemplo simulado \label{implementacionR} }
+%\subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
+En lo que sigue se ilustra la estimación de DLM mediante un ejemplo simulado de un proceso simple y su estimación mediante la biblioteca \verb|dlm| (CITA??) que permite trabajar con toda la familia de modelos lineales dinámicos. La ecuación \eqref{dlm_sim} muestra el modelo usado para simular datos,  en este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso de estado $\{\theta_t\}$ describe un paseo al azar, mientras que podemos considerar a $\{y_t\}$ como una observación ruidosa de $\{\theta_t\}$. El objetivo será recumerar los valores de los parámetros de varianzas y el proceso de estado. \textcolor{blue}{notar que no es estacionario...}
 
 \begin{equation}
 \begin{aligned}
@@ -366,31 +362,51 @@ Y_t&=\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,0.1^2) \\
 \label{dlm_sim}
 \end{equation}
 
-En este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso $\{\theta_t\}$ describe un paseo al azar, mientras que podemos considerar a $\{y_t\}$ como una observación ruidosa de $\{\theta_t\}$
-
-\definecolor{theta}{HTML}{F8766F}
-\definecolor{ye}{HTML}{7CAE00}
-\newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
-\newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
-
-
-
-
-
-
-
+El siguiente código de  \textbf{R} realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman. 
 \begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# Obtenemos estados y datos simulados}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1237}\hlstd{); N} \hlkwb{<-} \hlnum{100}
 
-{\centering \includegraphics[width=\maxwidth]{figure/graf7-1} 
+\hlstd{dd} \hlkwb{<-} \hlkwd{data_frame}\hlstd{(}\hlkwc{t} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{, ,N),} \hlkwc{w} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.1}\hlstd{),} \hlkwc{v} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.3}\hlstd{) )} \hlopt{%>%}
+  \hlkwd{mutate}\hlstd{(} \hlkwc{theta} \hlstd{=} \hlkwd{cumsum}\hlstd{(w),} \hlkwc{y} \hlstd{=} \hlkwd{ts}\hlstd{(theta} \hlopt{+} \hlstd{v) )}
 
-}
+\hlcom{# Función para estimar varianzas por Max.Ver}
+\hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)} \hlkwd{dlmModPoly}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwc{dV} \hlstd{= par[}\hlnum{1}\hlstd{],} \hlkwc{dW} \hlstd{= par[}\hlnum{2}\hlstd{])}
+\hlstd{modPoly} \hlkwb{<-} \hlkwd{dlmMLE}\hlstd{(dd}\hlopt{$}\hlstd{y,}\hlkwc{parm} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{1}\hlstd{),}\hlkwc{build} \hlstd{= parMLE)}
 
-\caption[Ejemplo de un proceso de espacio de estado y su estimación]{Ejemplo de un proceso de espacio de estado y su estimación.}\label{fig:graf7}
-\end{figure}
-
-
+\hlcom{# Kalman filter y Kalman smoother}
+\hlstd{mod_filter} \hlkwb{<-} \hlkwd{dlmFilter}\hlstd{(dd}\hlopt{$}\hlstd{y,} \hlkwd{parMLE}\hlstd{(modPoly}\hlopt{$}\hlstd{par))}
+\hlstd{mod_smooth} \hlkwb{<-} \hlkwd{dlmSmooth}\hlstd{(mod_filter)}
+\end{alltt}
+\end{kframe}
 \end{knitrout}
+
+En primer lugar, es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados. 
+
+Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener estimaciones de la esperanza posterior, 
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## List of 9
+##  $ y  : Time-Series [1:100] from 1 to 100: -0.18756 -0.226 0.05441 -0.00719 -0.21121 ...
+##  $ mod:List of 10
+##   ..- attr(*, "class")= chr "dlm"
+##  $ m  : Time-Series [1:101] from 0 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
+##  $ U.C:List of 101
+##  $ D.C: num [1:101, 1] 3162.278 0.289 0.211 0.184 0.172 ...
+##  $ a  : Time-Series [1:100] from 1 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
+##  $ U.R:List of 100
+##  $ D.R: num [1:100, 1] 3162.278 0.309 0.238 0.214 0.204 ...
+##  $ f  : Time-Series [1:100] from 1 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
+##  - attr(*, "class")= chr "dlmFiltered"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
+
+La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
 
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
@@ -406,33 +422,18 @@ En este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso $\{\
 \end{knitrout}
 
 
+
+\definecolor{theta}{HTML}{F8766F}
+\definecolor{ye}{HTML}{7CAE00}
+\newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
+\newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
+
+
 % \vspace{-.75em}
 % \captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado y su estimación. %En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.
 % }
 % \label{fig:graf7}
 
-El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
-
-Lo primero es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros: \\
-\verb|parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])|. En nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación.
-
-En este caso, si el objeto \verb|y| contiene la serie de datos, la función \verb|dlmMLE| devolverá el modelo, con los parámetros estimados:\\
-\verb|mod<- modPoly <- dlmMLE(y,parm = c(1,1),build = parMLE)|
-
-Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter|) para obtener estimaciones de la esperanza \textit{a posteriori}:\\
-\verb|mod_filter <- dlmFilter(y, parMLE(modPoly$par))|
-
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{alltt}
-\hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)} \hlkwd{dlmModPoly}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwc{dV} \hlstd{= par[}\hlnum{1}\hlstd{],} \hlkwc{dW} \hlstd{= par[}\hlnum{2}\hlstd{])}
-\hlstd{modPoly} \hlkwb{<-} \hlkwd{dlmMLE}\hlstd{(y,}\hlkwc{parm} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{1}\hlstd{),}\hlkwc{build} \hlstd{= parMLE)}
-\hlstd{mod_filter} \hlkwb{<-} \hlkwd{dlmFilter}\hlstd{(y,} \hlkwd{parMLE}\hlstd{(modPoly}\hlopt{$}\hlstd{par))}
-\hlstd{mof_filter}\hlopt{$}\hlstd{m}
-\end{alltt}
-\end{kframe}
-\end{knitrout}
 
 
 \section{Modelo estacional para el modelado de temperaturas}\label{DLMtemp}
