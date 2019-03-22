@@ -31,7 +31,7 @@ data_fun <- function(estacion) {
            temp = !!estacion -temp.bar) 
 }
 
-mod_fun <- function(ys, mm, prs) {
+mod_fun <- function(yy, mm, prs) {
   # ys: los datos de la serie, (es mejor que sea un ts() ??? )
   # mm: el modelo a estimar
   # prs: los valores iniciales de los parametros a estimar
@@ -45,8 +45,9 @@ mod_fun <- function(ys, mm, prs) {
 esta <- sym('estancuela')
 datos <- data_fun(esta)
 
-mms <-  function(par) dlmModTrig(s = 365, q=2, dV = exp(par[1]), dW = 0) +  
-  dlmModPoly(1, dV = exp(par[2]), dW = exp(par[3]))
+mms <-  function(par) dlmModPoly(1, dV = exp(par[2]), dW = exp(par[3])) + dlmModTrig(s = 365, q=2, dV = exp(par[1]), dW = 0)
+
+  
 
 yy <- filter(datos, serie == 'Tn') %>% pull(temp) %>% ts(start = c(1950, 1), frequency = 365)
 mod1 <- mod_fun(yy, mms, c(0,0,0) )
@@ -62,15 +63,25 @@ datos %>% filter(serie == 'Tn') %>%
 time(yy)[is.na(yy)]
 
 # otra estacion..
+
+mms <-  function(par) dlmModTrig(s = 365, q=2, dV = exp(par[1]), dW = 0) + 
+  dlmModTrig(s = 100, q=2, dV = exp(par[2]), dW = 0)
+
+
 pay <- sym('paysandu')
 datos.pay <- data_fun(pay)
-
 yy.pay <- filter(datos.pay, serie == 'Tn') %>% pull(temp) %>% ts(start = c(1950, 1), frequency = 365)
-mod1.pay <- mod_fun(yy, mms, c(0,0,0) )
 
-datos.pay %>% filter(serie == 'Tn') %>% 
-  mutate(yhat = apply(mod1.pay$smooth$s[-1, c(1,3,5)], 1, sum) )  %>% 
-  filter(fecha > make_date(1962, 1, 1), fecha < make_date(1962, 7, 31)) %>% 
+mod1.pay <- mod_fun(yy = yy.pay[(11*365):(14*365)], mms, c(0,0, 0) )
+
+mod1.pay$modelo$par
+mms(mod1.pay$modelo$par)
+
+
+datos.pay %>% filter(serie == 'Tn') %>% slice((11*365):(14*365)) %>% 
+  mutate(yhat = apply(mod1.pay$smooth$s[-1, c(1,3,5,7)], 1, sum) )  %>% 
+  #filter(fecha > make_date(2014, 1, 1)) %>% 
+  #filter(fecha > make_date(1962, 1, 1), fecha < make_date(1962, 7, 15)) %>%  
   ggplot() + geom_line(aes(fecha, temp)) + geom_line(aes(fecha, yhat), color = 'red' )
 
 
