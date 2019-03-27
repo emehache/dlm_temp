@@ -45,9 +45,10 @@ mod_fun <- function(yy, mm, prs) {
 esta <- sym('estancuela')
 datos <- data_fun(esta)
 
-mms <-  function(par) dlmModPoly(1, dV = exp(par[2]), dW = exp(par[3])) + dlmModTrig(s = 365, q=2, dV = exp(par[1]), dW = 0)
+mms <-  function(par) dlmModTrig(s = 365, q=2, dV = exp(par[1]), dW = exp(par[2]))
 
-  
+dlmModPoly(1, dV = exp(par[2]), dW = exp(par[3])) + 
+
 
 yy <- filter(datos, serie == 'Tn') %>% pull(temp) %>% ts(start = c(1950, 1), frequency = 365)
 mod1 <- mod_fun(yy, mms, c(0,0,0) )
@@ -64,38 +65,86 @@ time(yy)[is.na(yy)]
 
 # otra estacion..
 
-mms <-  function(par) dlmModTrig(s = 365, q=2, dV = exp(par[1]), dW = 0) + 
-  dlmModTrig(s = 100, q=2, dV = exp(par[2]), dW = 0)
+mms <-  function(par) dlmModPoly(1, dV = exp(par[1]), dW = exp(par[2])) + dlmModTrig(s = 365, q=2, dV = exp(par[3]), dW = 0)
+  
 
 
 pay <- sym('paysandu')
 datos.pay <- data_fun(pay)
 yy.pay <- filter(datos.pay, serie == 'Tn') %>% pull(temp) %>% ts(start = c(1950, 1), frequency = 365)
 
-mod1.pay <- mod_fun(yy = yy.pay[(11*365):(14*365)], mms, c(0,0, 0) )
+mod1.pay <- mod_fun(yy = yy.pay, mms, c(0,0, 0) )
 
 mod1.pay$modelo$par
 mms(mod1.pay$modelo$par)
 
 
-datos.pay %>% filter(serie == 'Tn') %>% slice((11*365):(14*365)) %>% 
-  mutate(yhat = apply(mod1.pay$smooth$s[-1, c(1,3,5,7)], 1, sum) )  %>% 
-  #filter(fecha > make_date(2014, 1, 1)) %>% 
+datos.pay %>% filter(serie == 'Tn') %>%  
+  mutate(yhat = apply(mod1.pay$smooth$s[-1, c(1,2,4)], 1, sum) )  %>% 
   #filter(fecha > make_date(1962, 1, 1), fecha < make_date(1962, 7, 15)) %>%  
-  ggplot() + geom_line(aes(fecha, temp)) + geom_line(aes(fecha, yhat), color = 'red' )
+  #filter(fecha > make_date(2014, 9, 2), fecha < make_date(2014,10,5)) %>%  
+  #filter(fecha > make_date(1967, 5, 20), fecha < make_date(1967, 6, 20)) %>%
+  ggplot() + geom_line(aes(fecha, temp)) + geom_point(aes(fecha, yhat), color = 'red' )
 
+# ============================================================
+# ============================================================
 
-#---
+# modelo Bivariado para las minimas
+datos.biva <- list(estancuela = select(datos,-estancuela), paysandu = select(datos.pay, -paysandu) ) %>% 
+  bind_rows(.id = 'location')
 
+yy.biva <- datos.biva %>% filter(serie == 'Tn') %>% select(location, temp, fecha) %>%
+  spread(location, temp) %>% select(-fecha) %>% ts(start = c(1950, 1), frequency = 365) 
+  
 
+# the 'base' univariate model
+uni <- dlmModPoly()
 
+# to get the matrices of the correct dim
+temps_mod <- uni %+% uni 
 
+## now redefine matrices to keep levels together and slopes together
+FF(temps_mod) <- FF(uni) %x% diag(2)
+GG(temps_mod) <- GG(uni) %x% diag(2)
+W(temps_mod)[] <- 0 # 'clean' the system variance
 
+## define a build function for MLE
+buildSUTSE <- function(psi) {
+  U <- matrix(0, nrow = 2, ncol = 2)
+  U[upper.tri(U)] <- psi[1:2]
+  diag(U) <- exp(0.5 * psi[3:4])
+  W(temps_mod)[3:4, 3:4] <- crossprod(U)
+  diag(V(temps_mod)) <- exp(0.5 * psi[5:6])
+  temps_mod
+}
 
+## estimation
+temps_est <- dlmMLE(yy.biva[(10*365):(14*365),], rep(-2, 9), buildSUTSE,
+                    control = list(maxit = 500)) ## few iters for test
 
+## check convergence
+print(temps_est$conv)
 
+## set up fitted model
+temps_mod <- buildSUTSE(temps_est$par)
 
+## look at the estimated variance / covariance matrices
+print(W(temps_mod)[2:3, 2:3])
+print(cov2cor(W(temps_mod)[2:3, 2:3])) # slopes
+print(sqrt(diag(V(temps_mod)))) # observation standard deviations
 
+library(stringr)
+## smooths
+tempsSmooth <- dlmSmooth(yy.biva[(10*365):(14*365),], temps_mod)
+
+ data_frame(yhat.estancuela = apply(tempsSmooth$s[-1, c(1,3)],1,sum),
+            yhat.paysandu = apply(tempsSmooth$s[-1, c(2,4)],1,sum) ) %>% 
+   bind_cols(data.frame(yy.biva[(10*365):(14*365),]) ) %>% 
+   mutate(time = time(yy.biva)[(10*365):(14*365)]) %>% 
+   gather(serie, vv, -time) %>% 
+   mutate( location = factor( str_detect(serie, 'paysandu'), labels = c('est', 'pay') ), 
+           tipo = factor(str_detect(serie, 'yhat'), labels=c('obs', 'yhat')  ) ) %>% 
+   ggplot() + geom_line(aes(time, vv, color = tipo)) + facet_grid(location ~ .)
 
 
 
