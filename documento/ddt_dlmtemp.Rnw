@@ -99,7 +99,7 @@ opts_chunk$set(echo=FALSE,message=F,warning = F,fig.align = "center",fig.height=
 paquetes <- c("knitr","xtable","ggplot2","tidyverse","dlm", "lubridate")
 sapply(paquetes,require,character.only=T)
 load(file = "d1")
-load(file = "d2")
+load(file = "d2") # datos completos para estanzuela
 @
 
 
@@ -354,7 +354,7 @@ El siguiente código de  \textbf{R} realiza la simulación de un conjunto de dat
 # Obtenemos estados y datos simulados
 set.seed(1237); N <- 100
 
-dd <- data_frame(t = seq(0,1, ,N), w = rnorm(N,0,.1), v = rnorm(N,0,.3) ) %>% 
+dd <- data_frame(t = seq(0,1, length.out = N), w = rnorm(N,0,.1), v = rnorm(N,0,.3) ) %>% 
   mutate( theta = cumsum(w), y = ts(theta + v) )
 
 # Función para estimar varianzas por Max.Ver
@@ -439,11 +439,62 @@ En este trabajo, para la estimación de tales percentiles, nos valdremos de la d
 
 Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
-<<echo=T,eval=F>>=
-parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = par, dW = 0)
-mod<- dlmMLE(y,parm = 16,build= parMLE)
-Tn.filter <- dlmFilter(y,parMLE(mod$par))
+<<echo=T, cache=TRUE>>=
+parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = exp(par), dW = 0)
+
+# Estima el modelo para temp Minimas
+mod.tn <- filter(d2, serie == 'Tn') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmMLE( parm = 0, build= parMLE)
+
+# Estima el modelo para temp Maximas
+mod.tx <- filter(d2, serie == 'Tx') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmMLE( parm = 0, build= parMLE)
 @
+
+
+
+
+<<eval=FALSE>>=
+
+smooth.tn <- d2 %>% filter(serie == 'Tn') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmSmooth(  parMLE(mod.tn$par) )
+
+zz <- d2 %>% filter(serie == 'Tn') %>% 
+  mutate(mn = mean(temp, na.rm = TRUE), 
+    yhat = apply(smooth.tn$s[-1, c(1,3)], 1, sum) + mn )
+
+smooth.tx <- d2 %>% filter(serie == 'Tx') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmSmooth(  parMLE(mod.tx$par) )
+
+res.long <- d2 %>% filter(serie == 'Tx') %>% 
+  mutate(mn = mean(temp, na.rm = TRUE), 
+         yhat = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
+  bind_rows(zz)
+
+res %>% 
+  filter(fecha > make_date(2010, 1, 1), fecha < make_date(2010, 12, 31)) %>%  
+  ggplot() +
+  geom_line(aes(fecha, temp)) + geom_line(aes(fecha, yhat), color = 'red' ) + facet_grid(serie~.)
+
+res.wide <- d2 %>% filter(serie == 'Tx') %>% 
+  mutate(mn = mean(temp, na.rm = TRUE), 
+         yhat.tx = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
+  select( temp, fecha, yhat.tx) %>% 
+  inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
+  set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
+  mutate( dia.frio = yhat.tx < tx & yhat.tn < tn, 
+          dia.calor = yhat.tx > tx & yhat.tn > tn, 
+          ola.frio = stats::filter(dia.frio, filter = c(1/3, 1/3, 1/3) ) )
+  
+
+@
+
+
+
 
 El objeto \verb|Tn.filter$m| tendrá la estimación.
 % 
