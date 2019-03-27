@@ -433,13 +433,14 @@ Como se explicó anteriormente, para caracterizar olas de frío debemos estimar 
 
 En este trabajo, para la estimación de tales percentiles, nos valdremos de la distribución de $\theta_t | \{y_1,\dots,y_t\}$. Se puede probar que, bajo el modelo descripto en la expresión (\ref{eq:modelo}), se cumple que $\theta_t | \{y_1,\dots,y_t\} \sim \mathcal{N}(m_t,C_t)$, y $y_t|\theta_t \sim \mathcal{N}(Fm_t,FC_tF^T + \text{v}_t)$. El filtro de Kalman nos devuelve las secuencias $(m_t)_{1\leq t \leq T}$ y $(C_t)_{1\leq t \leq T}$ para la serie de temperaturas mínimas y máximas. Por tanto, el estimador para el percentil 10 de mínima para el día $t$ será $\hat{p}^n_{10_t}:=Fm_t+\sqrt{FC_tF^T + \text{v}_t}\times \Phi(0.10)$, donde $\Phi(x)=\p(X\leq x)$ con $X\sim N(0,1)$. Análogamente se hace lo mismo para el percentil 10 de temperaturas máximas.
 
-\section{Implementación en R - paquete `dlm'}
+%\section{Implementación en R - paquete `dlm'}
+\section{Resultados}
 
 % El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de 
 
 Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
-<<echo=T, cache=TRUE>>=
+<<estima.modelos, echo=T, cache=TRUE>>=
 parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = exp(par), dW = 0)
 
 # Estima el modelo para temp Minimas
@@ -453,11 +454,7 @@ mod.tx <- filter(d2, serie == 'Tx') %>% pull(temp) %>%
   dlmMLE( parm = 0, build= parMLE)
 @
 
-
-
-
-<<eval=FALSE>>=
-
+<<suavizados>>=
 smooth.tn <- d2 %>% filter(serie == 'Tn') %>% pull(temp) %>% 
   ts(start = c(1950, 1), frequency = 365) %>% 
   dlmSmooth(  parMLE(mod.tn$par) )
@@ -474,11 +471,34 @@ res.long <- d2 %>% filter(serie == 'Tx') %>%
   mutate(mn = mean(temp, na.rm = TRUE), 
          yhat = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
   bind_rows(zz)
+@
 
-res %>% 
+<<popurri>>=
+res.long %>% 
   filter(fecha > make_date(2010, 1, 1), fecha < make_date(2010, 12, 31)) %>%  
   ggplot() +
   geom_line(aes(fecha, temp)) + geom_line(aes(fecha, yhat), color = 'red' ) + facet_grid(serie~.)
+
+
+# obtener las olas de frio y calor
+get_wave <- function(x) {
+  # x es un vector de 0 y 1, indicando si un dia cuenta como extremo (frio o calor)
+  # hay que identificar rachas de 3 o mas lugares con x=1
+  zz <- rle(x) %>% 
+  lapply( as.vector ) %>% bind_cols() %>% 
+  mutate( pos2 =  1 + cumsum(lengths), nn = n() ) %>% 
+  mutate(pos = c(1, lag(pos2)[-1] ) ) %>% 
+  select(-pos2, -nn) %>% 
+  filter( values == 1, lengths > 2)
+  
+  out <- rep(0, length(x) )
+  
+  for( i in 1:nrow(zz) ) {
+    start <- zz$pos[i]; end <- start + zz$lengths[i]-1
+    out[start:end] <- 1
+  }
+  out
+}
 
 res.wide <- d2 %>% filter(serie == 'Tx') %>% 
   mutate(mn = mean(temp, na.rm = TRUE), 
@@ -486,11 +506,35 @@ res.wide <- d2 %>% filter(serie == 'Tx') %>%
   select( temp, fecha, yhat.tx) %>% 
   inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
   set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
-  mutate( dia.frio = yhat.tx < tx & yhat.tn < tn, 
-          dia.calor = yhat.tx > tx & yhat.tn > tn, 
-          ola.frio = stats::filter(dia.frio, filter = c(1/3, 1/3, 1/3) ) )
-  
+  mutate( dia.frio = as.numeric(yhat.tx < tx & yhat.tn < tn), 
+          dia.calor = as.numeric(yhat.tx > tx & yhat.tn > tn ) ) %>% 
+  mutate(ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
 
+# bolazos de resumen ....   
+res.wide %>% 
+  mutate(year = year(fecha), month = month(fecha) ) %>% 
+  group_by(year, month) %>% 
+  summarise( ola.calor = sum(ola.calor), ola.frio = sum(ola.frio) ) %>% 
+  ggplot() + geom_tile(aes(year,month, fill=ola.calor) ) 
+
+res.wide %>% 
+  mutate(year = year(fecha), month = month(fecha) ) %>% 
+  filter(ola.frio == 1) %>% 
+  group_by(year, month) %>% 
+  summarise( tot.ola.frio = sum(ola.frio), 
+             temp.frio = mean(tn, na.rm=T) ) %>% 
+  ggplot() + 
+  geom_line(aes(year, temp.frio) )  + 
+  geom_smooth(aes(year, temp.frio) )  + 
+  facet_wrap(~month, scales = 'free_y')
+
+res.wide %>% 
+  mutate(year = year(fecha), month = month(fecha) ) %>% 
+  group_by(year, month) %>% 
+  summarise( tot.ola.calor = sum(ola.calor), tot.ola.frio = sum(ola.frio), 
+             temp.frio = mean(tn * ola.frio, na.rm=T), temp.calor = mean(tx*ola.calor, na.rm = T) ) %>% 
+  ggplot() + geom_line(aes(year, tot.ola.frio) ) + geom_smooth( aes(year, tot.ola.frio) ) + 
+  facet_wrap(~month)
 @
 
 
@@ -522,7 +566,7 @@ Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter
 
 En la figura \ref{fig:graf6} se muestra en un período de tres años, las series de mínima y máxima y la estimación de su valor esperado mediante el filtro de Kalman.
 
-\section{Resultados}
+%\section{Resultados}
 
 \begin{center}
 \includegraphics[width=.45\textwidth ,height=15em]{graf6.png}

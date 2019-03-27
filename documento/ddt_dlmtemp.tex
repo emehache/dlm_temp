@@ -369,7 +369,7 @@ El siguiente código de  \textbf{R} realiza la simulación de un conjunto de dat
 \hlcom{# Obtenemos estados y datos simulados}
 \hlkwd{set.seed}\hlstd{(}\hlnum{1237}\hlstd{); N} \hlkwb{<-} \hlnum{100}
 
-\hlstd{dd} \hlkwb{<-} \hlkwd{data_frame}\hlstd{(}\hlkwc{t} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{, ,N),} \hlkwc{w} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.1}\hlstd{),} \hlkwc{v} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.3}\hlstd{) )} \hlopt{%>%}
+\hlstd{dd} \hlkwb{<-} \hlkwd{data_frame}\hlstd{(}\hlkwc{t} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,} \hlkwc{length.out} \hlstd{= N),} \hlkwc{w} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.1}\hlstd{),} \hlkwc{v} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.3}\hlstd{) )} \hlopt{%>%}
   \hlkwd{mutate}\hlstd{(} \hlkwc{theta} \hlstd{=} \hlkwd{cumsum}\hlstd{(w),} \hlkwc{y} \hlstd{=} \hlkwd{ts}\hlstd{(theta} \hlopt{+} \hlstd{v) )}
 
 \hlcom{# Función para estimar varianzas por Max.Ver}
@@ -459,7 +459,8 @@ Como se explicó anteriormente, para caracterizar olas de frío debemos estimar 
 
 En este trabajo, para la estimación de tales percentiles, nos valdremos de la distribución de $\theta_t | \{y_1,\dots,y_t\}$. Se puede probar que, bajo el modelo descripto en la expresión (\ref{eq:modelo}), se cumple que $\theta_t | \{y_1,\dots,y_t\} \sim \mathcal{N}(m_t,C_t)$, y $y_t|\theta_t \sim \mathcal{N}(Fm_t,FC_tF^T + \text{v}_t)$. El filtro de Kalman nos devuelve las secuencias $(m_t)_{1\leq t \leq T}$ y $(C_t)_{1\leq t \leq T}$ para la serie de temperaturas mínimas y máximas. Por tanto, el estimador para el percentil 10 de mínima para el día $t$ será $\hat{p}^n_{10_t}:=Fm_t+\sqrt{FC_tF^T + \text{v}_t}\times \Phi(0.10)$, donde $\Phi(x)=\p(X\leq x)$ con $X\sim N(0,1)$. Análogamente se hace lo mismo para el percentil 10 de temperaturas máximas.
 
-\section{Implementación en R - paquete `dlm'}
+%\section{Implementación en R - paquete `dlm'}
+\section{Resultados}
 
 % El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de 
 
@@ -468,12 +469,57 @@ Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente p
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
-\hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)}  \hlkwd{dlmModTrig}\hlstd{(}\hlkwc{s} \hlstd{=} \hlnum{365}\hlstd{,}\hlkwc{q}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{dV} \hlstd{= par,} \hlkwc{dW} \hlstd{=} \hlnum{0}\hlstd{)}
-\hlstd{mod}\hlkwb{<-} \hlkwd{dlmMLE}\hlstd{(y,}\hlkwc{parm} \hlstd{=} \hlnum{16}\hlstd{,}\hlkwc{build}\hlstd{= parMLE)}
-\hlstd{Tn.filter} \hlkwb{<-} \hlkwd{dlmFilter}\hlstd{(y,}\hlkwd{parMLE}\hlstd{(mod}\hlopt{$}\hlstd{par))}
+\hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)}  \hlkwd{dlmModTrig}\hlstd{(}\hlkwc{s} \hlstd{=} \hlnum{365}\hlstd{,}\hlkwc{q}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{dV} \hlstd{=} \hlkwd{exp}\hlstd{(par),} \hlkwc{dW} \hlstd{=} \hlnum{0}\hlstd{)}
+
+\hlcom{# Estima el modelo para temp Minimas}
+\hlstd{mod.tn} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tn'}\hlstd{)} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+  \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
+  \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
+
+\hlcom{# Estima el modelo para temp Maximas}
+\hlstd{mod.tx} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tx'}\hlstd{)} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+  \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
+  \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
 \end{alltt}
 \end{kframe}
 \end{knitrout}
+
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-1} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-2} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-3} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-4} 
+
+}
+
+
+
+\end{knitrout}
+
+
+
 
 El objeto \verb|Tn.filter$m| tendrá la estimación.
 % 
@@ -501,7 +547,7 @@ Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter
 
 En la figura \ref{fig:graf6} se muestra en un período de tres años, las series de mínima y máxima y la estimación de su valor esperado mediante el filtro de Kalman.
 
-\section{Resultados}
+%\section{Resultados}
 
 \begin{center}
 \includegraphics[width=.45\textwidth ,height=15em]{graf6.png}
