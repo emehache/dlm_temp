@@ -474,11 +474,6 @@ res.long <- d2 %>% filter(serie == 'Tx') %>%
 @
 
 <<popurri>>=
-res.long %>% 
-  filter(fecha > make_date(2010, 1, 1), fecha < make_date(2010, 12, 31)) %>%  
-  ggplot() +
-  geom_line(aes(fecha, temp)) + geom_line(aes(fecha, yhat), color = 'red' ) + facet_grid(serie~.)
-
 
 # obtener las olas de frio y calor
 get_wave <- function(x) {
@@ -506,16 +501,26 @@ res.wide <- d2 %>% filter(serie == 'Tx') %>%
   select( temp, fecha, yhat.tx) %>% 
   inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
   set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
-  mutate( dia.frio = as.numeric(yhat.tx < tx & yhat.tn < tn), 
-          dia.calor = as.numeric(yhat.tx > tx & yhat.tn > tn ) ) %>% 
+  mutate( dia.frio = as.numeric(yhat.tx > tx & yhat.tn > tn), 
+          dia.calor = as.numeric(yhat.tx < tx & yhat.tn < tn ) ) %>% 
   mutate(ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
 
 # bolazos de resumen ....   
+aux <- res.wide %>% 
+  filter(fecha > make_date(2010, 1, 1), fecha < make_date(2010, 12, 31))
+
+ggplot() +
+  geom_line(data= aux, aes(fecha, tn) ) + geom_line(data= aux, aes(fecha, tx) ) + 
+  geom_line(data= aux, aes(fecha, yhat.tn),color='blue' ) + geom_line(data= aux, aes(fecha, yhat.tx),color='blue' ) + 
+  geom_point(data = filter(aux, ola.frio==1), aes(fecha, tn), color = 'red' ) +
+  geom_point(data = filter(aux, ola.frio==1), aes(fecha, tx), color = 'red' )
+
 res.wide %>% 
   mutate(year = year(fecha), month = month(fecha) ) %>% 
+  filter(ola.frio == 1) %>% 
   group_by(year, month) %>% 
   summarise( ola.calor = sum(ola.calor), ola.frio = sum(ola.frio) ) %>% 
-  ggplot() + geom_tile(aes(year,month, fill=ola.calor) ) 
+  ggplot() + geom_tile(aes(year,month, fill = ola.frio) ) 
 
 res.wide %>% 
   mutate(year = year(fecha), month = month(fecha) ) %>% 
