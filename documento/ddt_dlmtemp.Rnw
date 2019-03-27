@@ -391,13 +391,13 @@ data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %
   scale_alpha_discrete(range = c(.5,1),guide=F)+scale_color_manual(values=c("theta"='#F8766F',"y"='#7CAE00',"estimacion"="#9999CC"),guide=myguide)+theme_bw()
 @
 
-<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.">>=
+<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
 data.frame(t,y,theta, 
            filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
   gather(tipo, estimacion, filtro, suave, pred1) %>% 
   gather( serie, valor, -t, -tipo ) %>% 
   ggplot(aes(x=t,y=valor,col=serie)) + geom_line() + 
-    facet_grid(~tipo) +
+    facet_grid(tipo~.) +
   scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
   theme_bw()
 @
