@@ -116,6 +116,8 @@ Manuel \textsc{Hernández Banadik}
 \listoffigures
 \listoftables
 
+\pagebreak
+
 \begin{abstract}
 
 Contamos con datos de mediciones diarias de temperaturas mínimas y máximas, de una estación meteorológica de Uruguay, desde Enero-1950 a Octubre-2014.
@@ -126,7 +128,7 @@ Se define una ola de frío, como un período de tiempo en el cual, la temperatur
 
 \section{Olas de frío}
 
-Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo mínimo. Durante ese tiempo, la temperatura observada debe mantenerse siempre por debajo del umbral definido.
+Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo mínimo. Durante esa ventana de tiempo, la temperatura observada debe mantenerse siempre por debajo del umbral definido.
 
 Para el presente trabajo, hemos definido una ola de frío como un período de tiempo mayor o igual a 3 días, en los cuales las temperaturas mínimas y máximas son inferiores a los respectivos percentiles 10 esperados para tales días.
 
@@ -135,14 +137,14 @@ Esta definición requiere de definir para cada día del año un percentil 10 de 
 Podemos decir entonces que una sucesión de días $t_1, \dots, t_k$ constituyen una ola de frío de largo $k$ si, siendo $k\geq 3$, se cumple simultáneamente que:
 $\begin{cases} y^n_{t_i} < p^n_{10_i}  \\ y^x_{t_i} < p^x_{10_i} \end{cases}$ para $i=1,\dots,k$
 
-\section{Dynamic Linear Models}
+\section{Modelos lineales dinámicos}
 
 %Los modelos lineales dinámicos (DLM) son una familia de modelos de espacio de estado. Procesos muy conocidos pueden ser vistos como modelos DLM: el paseo al azar, el modelo de regresión normal, los modelos ARIMA, entre otros.
 %
 %Un modelo estadístico de posición, establece que hay un parámetro del cual tenemos observaciones ruidosas. %Podemos extender esa idea, y considerar que tenemos obervaciones ruidosas de un
 %Podemos extender la idea de parámetro 
 
-Un modelo lineal dinámico (DLM) considera una serie de tiempo, como una observación ruidosa de un proceso dinámico. La figura \ref{fig:graf7} muestra un ejemplo de un proceso concebido de esta forma. El modelo está definido a través de una ecuación de evolución y una ecuación de observación. La ecuación de evolución define cómo se vincula el estado del proceso en tiempo $t$ con su estado en tiempo $t+1$; la ecuación de observación, explicita cómo es observado el proceso en tiempo $t$ en función del estado en el que se encuentra a $t$. En una expresión y/o en la otra, se introduce un componente aleatorio.
+Un modelo lineal dinámico (DLM) considera una serie de tiempo, como una observación ruidosa de un proceso dinámico no observable. El modelo está definido a través de una ecuación de evolución y una ecuación de observación. La ecuación de evolución define cómo se vincula el estado del proceso en tiempo $t$ con su estado en tiempo $t+1$; la ecuación de observación, explicita cómo es observado el proceso en tiempo $t$ en función del estado en el que se encuentra a $t$. En una expresión y/o en la otra, se introduce un componente aleatorio.
 
 Tenemos entonces la siguiente expresión para el modelo:
 %\begin{center}
@@ -161,10 +163,25 @@ Y_t&=F_t\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,V_t) \\
 
 Si se tiene las observaciones $y_1,\dots,y_T$, puede ser de interés obtener una estimación de $\E(\theta_t | y_1,\dots,y_t)$, es decir, el valor esperado del proceso que subyace a las observaciones en tiempo $t$, dado que tenemos las observaciones pasadas. Esta cantidad es estimada mediante el Filtro de Kalman.
 
+La figura \ref{fig:graf7} muestra un ejemplo de un proceso univariado concebido de esta forma. 
+\begin{equation}
+\begin{aligned}
+Y_t&=\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0;0.1^2) \\
+\theta_t &= \theta_{t-1} + w_t \;&\; w_t \sim \mathcal{N}(0;0.3^2)
+\end{aligned}
+\end{equation}
+
+En este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso $\{\theta_t\}$ describe un paseo al azar, mientras que podemos considerar a $\{y_t\}$ como una observación ruidosa de $\{\theta_t\}$
+
+\definecolor{theta}{HTML}{F8766F}
+\definecolor{ye}{HTML}{7CAE00}
+\newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
+\newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
+
 \begin{center}
-\includegraphics[width=.45\textwidth ,height=12em]{graf7.png}
+\includegraphics[width=.7\textwidth]{graf7.pdf}
 \vspace{-.75em}
-\captionof{figure}{Ejemplo de un proceso de espacio de estado. En rojo, se representa el proceso \textit{no-observable}, en verde se representa su observación.}
+\captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado. En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.}
 \label{fig:graf7}
 \end{center}
 
@@ -214,7 +231,7 @@ En la figura \ref{fig:graf6} se muestra en un período de tres años, las series
 
 Como se explicó anteriormente, para caracterizar olas de frío debemos estimar los percentiles 10 de temperaturas mínimas y máximas para cada día del año. Tenemos las series temporales de los datos de mínima y máxima, a escala diaria, desde el 1-Enero de 1950 hasta el 10-Octubre de 2014, por tanto para cada día del año (del 1-Enero al 31-Diciembre) tenemos más de sesenta observaciones de temperaturas. Esto da para cada día del año una distribución de temperaturas.  %Un acercamiento a este problema se puede ver en {\color{red}[referencia a Santiago]} donde se computa el percentil empírico para cada día del año y luego, a la serie de percentiles, se le aplica un filtro de medias móviles con una ventana de 31 días para obtener una estimación suave.
 
-En este trabajo, para la estimación de tales percentiles, nos valdremos de que en el modelo descripto en la expresión (\ref{eq:modelo}) se cumple $\theta_t | \{y_1,\dots,y_t\} \sim \mathcal{N}(m_t,C_t)$, y $y_t|\theta_t \sim \mathcal{N}(Fm_t,FC_tF^T + \text{v}_t)$. El filtro de Kalman nos devuelve las secuencias $(m_t)_{1\leq t \leq T}$ y $(C_t)_{1\leq t \leq T}$ para la serie de temperaturas mínimas y máximas. Por tanto el estimador para el percentil 10 de mínima para el día $t$ será $\hat{p}^n_{10_t}:=Fm_t+\sqrt{FC_tF^T + \text{v}_t}\times z_{0.10}$. Análogamente se hizo lo mismo para el percentil 10 de las máximas.
+En este trabajo, para la estimación de tales percentiles, nos valdremos de la distribución de $\theta_t | \{y_1,\dots,y_t\}$. Se prueba que, bajo el modelo descripto en la expresión (\ref{eq:modelo}), se cumple $\theta_t | \{y_1,\dots,y_t\} \sim \mathcal{N}(m_t,C_t)$, y $y_t|\theta_t \sim \mathcal{N}(Fm_t,FC_tF^T + \text{v}_t)$. El filtro de Kalman nos devuelve las secuencias $(m_t)_{1\leq t \leq T}$ y $(C_t)_{1\leq t \leq T}$ para la serie de temperaturas mínimas y máximas. Por tanto, el estimador para el percentil 10 de mínima para el día $t$ será $\hat{p}^n_{10_t}:=Fm_t+\sqrt{FC_tF^T + \text{v}_t}\times \Phi(0.10)$, donde $\Phi(x)=\p(X\leq x)$ con $X\sim N(0,1)$. Análogamente se hace lo mismo para el percentil 10 de temperaturas máximas.
 
 \begin{center}
 \includegraphics[width=.4\textwidth,height=21em]{graf4.png}

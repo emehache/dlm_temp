@@ -116,11 +116,17 @@ Manuel \textsc{Hernández Banadik}
 \listoffigures
 \listoftables
 
-\section{Resumen}
+<<cache=TRUE>>=
+
+@
+
+\begin{abstract}
 
 Contamos con datos de mediciones diarias de temperaturas mínimas y máximas, de una estación meteorológica de Uruguay, desde Enero-1950 a Octubre-2014.
 
 Se define una ola de frío, como un período de tiempo en el cual, la temperatura observada es inferior a un umbral. El objetivo es determinar dicho umbral a través de la estimación del percentil 10 de las temperaturas. Utilizaremos los modelos lineales dinámicos para modelar la serie, y para la estimación de los percentiles.
+
+\end{abstract}
 
 \section{Olas de frío}
 
@@ -160,7 +166,7 @@ Y_t&=F_t\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,V_t) \\
 Si se tiene las observaciones $y_1,\dots,y_T$, puede ser de interés obtener una estimación de $\E(\theta_t | y_1,\dots,y_t)$, es decir, el valor esperado del proceso que subyace a las observaciones en tiempo $t$, dado que tenemos las observaciones pasadas. Esta cantidad es estimada mediante el Filtro de Kalman.
 
 \begin{center}
-\includegraphics[width=.45\textwidth ,height=12em]{graf7.png}
+\includegraphics[width=.45\textwidth ,height=12em]{graf7.pdf}
 \vspace{-.75em}
 \captionof{figure}{Ejemplo de un proceso de espacio de estado. En rojo, se representa el proceso \textit{no-observable}, en verde se representa su observación.}
 \label{fig:graf7}
