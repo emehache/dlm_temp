@@ -3,11 +3,11 @@ paquetes <- c("tidyverse","lubridate","dlm")
 sapply(paquetes,require,character.only=T)
 
 # datos originales
-minimas <- read.table("Tn_1950_2014_con_QC_v1.txt", sep = ',', na.strings = "NaN")
-maximas <- read.table("Tx_1950_2014_con_QC_v1.txt", sep = ',', na.strings = "NaN")
+minimas <- read.table("datos_resultados/Tn_1950_2014_con_QC_v1.txt", sep = ',', na.strings = "NaN")
+maximas <- read.table("datos_resultados/Tx_1950_2014_con_QC_v1.txt", sep = ',', na.strings = "NaN")
 
 
-maximas %>%  set_names(nm = c( "year", "month", "day","artigas", "carrasco", 
+minimas %>%  set_names(nm = c( "year", "month", "day","artigas", "carrasco", 
                  "estancuela", "melo", "mercedes", "paso_toros", 
                  "paysandu", "prado", "rivera", "rocha", "salto") ) %>% 
   select(-year, -month, -day) %>% 
@@ -109,6 +109,7 @@ GG(temps_mod) <- GG(uni) %x% diag(2)
 W(temps_mod)[] <- 0 # 'clean' the system variance
 
 ## define a build function for MLE
+# ver ayuda de ? dlmMLE que tiene un ejemplo de esto ...
 buildSUTSE <- function(psi) {
   U <- matrix(0, nrow = 2, ncol = 2)
   U[upper.tri(U)] <- psi[1:2]
@@ -147,7 +148,8 @@ tempsSmooth <- dlmSmooth(yy.biva[(10*365):(14*365),], temps_mod)
    ggplot() + geom_line(aes(time, vv, color = tipo)) + facet_grid(location ~ .)
 
 
-
+ data_frame(yhat.estancuela = apply(tempsSmooth$s[-1, c(1,3)],1,sum),
+            yhat.paysandu = apply(tempsSmooth$s[-1, c(2,4)],1,sum) ) %>% head()
   
 #====================================================
 # # mugre ....
