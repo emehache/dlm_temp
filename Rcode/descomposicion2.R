@@ -3,7 +3,7 @@ paquetes <- c("tidyverse","lubridate","dlm","ggfortify","smoother","KernSmooth",
 sapply(paquetes,require,character.only=T)
 #load(file = "DLMmod.RData")
 
-minimas <- read.table("Tn_1950_2014_con_QC_v1.txt", sep = ',', 
+minimas <- read.table("datos_resultados/Tn_1950_2014_con_QC_v1.txt", sep = ',', 
                       na.strings = "NaN") %>%
   set_names(nm = c("year", "month", "day","artigas", "carrasco", "estancuela", 
                    "melo", "mercedes", "paso_toros", 
@@ -11,7 +11,7 @@ minimas <- read.table("Tn_1950_2014_con_QC_v1.txt", sep = ',',
   mutate(fecha = make_date(year, month, day)) %>%
   as_data_frame()
 
-maximas <- read.table("Tx_1950_2014_con_QC_v1.txt", sep = ',', 
+maximas <- read.table("datos_resultados/Tx_1950_2014_con_QC_v1.txt", sep = ',', 
                       na.strings = "NaN") %>%
   set_names(nm = c("year", "month", "day","artigas", "carrasco", "estancuela", 
                    "melo", "mercedes", "paso_toros", 

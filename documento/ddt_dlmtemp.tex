@@ -472,12 +472,12 @@ Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente p
 \hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)}  \hlkwd{dlmModTrig}\hlstd{(}\hlkwc{s} \hlstd{=} \hlnum{365}\hlstd{,}\hlkwc{q}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{dV} \hlstd{=} \hlkwd{exp}\hlstd{(par),} \hlkwc{dW} \hlstd{=} \hlnum{0}\hlstd{)}
 
 \hlcom{# Estima el modelo para temp Minimas}
-\hlstd{mod.tn} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tn'}\hlstd{)} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+\hlstd{mod.tn} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tn'}\hlstd{)} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{temp} \hlstd{= temp}\hlopt{-}\hlkwd{mean}\hlstd{(temp,} \hlkwc{na.rm} \hlstd{= T))} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
   \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
   \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
 
 \hlcom{# Estima el modelo para temp Maximas}
-\hlstd{mod.tx} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tx'}\hlstd{)} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+\hlstd{mod.tx} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tx'}\hlstd{)} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{temp} \hlstd{= temp}\hlopt{-}\hlkwd{mean}\hlstd{(temp,} \hlkwc{na.rm} \hlstd{= T))} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
   \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
   \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
 \end{alltt}
