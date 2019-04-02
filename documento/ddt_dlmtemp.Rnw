@@ -98,13 +98,12 @@ opts_chunk$set(echo=FALSE,message=F,warning = F,fig.align = "center",fig.height=
 <<paquetes,include=F>>=
 paquetes <- c("knitr","xtable","ggplot2","tidyverse","dlm", "lubridate")
 sapply(paquetes,require,character.only=T)
-<<<<<<< HEAD
-load(file = "documento/d1")
-load(file = "documento/d2") # datos completos para estanzuela
-=======
+
+# load(file = "documento/d1")
+# load(file = "documento/d2") # datos completos para estanzuela
+
 load(file = "d1")
 load(file = "d2") # datos completos para estanzuela
->>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
 @
 
 
@@ -178,12 +177,9 @@ La siguiente sección presenta los datos utilizados y una definición de ola de 
 
 \section{Los datos}
 
-<<<<<<< HEAD
+
 Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período 1951 a 2014. Definimos $\{Y^n_{t}\}$ y $\{Y^x_{t}\}$ la serie diaria de temperaturas mínima y máxima respectivamente.
 %Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
-=======
-Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período XXX a ZZZ. Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
->>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
 
 Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo durante la cual, la temperatura observada debe mantenerse por debajo del umbral definido. 
 
@@ -401,7 +397,7 @@ las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del 
 
 La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
 
-<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
+<<graf7c,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
 dd %>% 
   select(t, y, theta) %>% 
   mutate(filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
@@ -477,7 +473,7 @@ mod.tn <- filter(d2, serie == 'Tn') %>%
 # Estima el modelo para temp Maximas
 
 mod.tx <- filter(d2, serie == 'Tx') %>%
-  mutate(temp = temp-mean(temp, na.rm = T)) %>% pull(temp) %>%
+  mutate(temp = temp-mean(temp, na.rm = T)) %>% 
   pull(temp) %>% 
   ts(start = c(1950, 1), frequency = 365) %>% 
   dlmMLE( parm = 0, build= parMLE)
@@ -517,7 +513,7 @@ smooth.tx <- d2 %>% filter(serie == 'Tx') %>% pull(temp) %>%
   ts(start = c(1950, 1), frequency = 365) %>% 
   dlmSmooth(  parMLE(mod.tx$par) )
 
-res.wide <- d2 %>% spread(serie, temp) %>% 
+res.wide <- d2 %>% spread(serie, temp) %>% arrange(fecha) %>% 
   mutate( yhat.tn = apply( smooth.tn$s[-1,], 1, function(x)  parMLE(mod.tn$par)$FF %*% x)+mean(Tn, na.rm = T),
           yhat.tn2 = apply( smooth.tn$s[-1,], 1, function(x)  parMLE(mod.tn$par)$FF %*% x),
           yhat.tx = apply( smooth.tx$s[-1,], 1, function(x)  parMLE(mod.tx$par)$FF %*% x)+mean(Tx, na.rm = T),
