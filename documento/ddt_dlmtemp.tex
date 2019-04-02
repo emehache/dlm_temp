@@ -213,8 +213,12 @@ La siguiente sección presenta los datos utilizados y una definición de ola de 
 
 \section{Los datos}
 
+<<<<<<< HEAD
 Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período 1951 a 2014. Definimos $\{Y^n_{t}\}$ y $\{Y^x_{t}\}$ la serie diaria de temperaturas mínima y máxima respectivamente.
 %Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
+=======
+Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período XXX a ZZZ. Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
+>>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
 
 Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo durante la cual, la temperatura observada debe mantenerse por debajo del umbral definido. 
 
@@ -222,7 +226,11 @@ En el presente trabajo, hemos definido una ola de frío como un período de tiem
 
 $\begin{cases} y^n_{t_i} < p^n_{10_i}  \\ y^x_{t_i} < p^x_{10_i} \end{cases}$ para $i=1,\dots,k$
 
+<<<<<<< HEAD
 Vizualizar fenómenos de olas de extremos no es trivial, aplicando la definición anterior, debemos tener en cuenta varios factores. En primer lugar la condición recae simultaneamente sobre la temperatura mínima y máxima por lo que debemos prestar atención a ambas series. Al mismo tiempo debemos comparar la temperatura de cada día en particular con los percentiles para ese día, o más en general, con las temperaturas esperables. Finalmente, los días deben ser consecutivos para formar una ola de extremos. 
+=======
+Vizualizar fenómenos de olas de extremos no es trivial, aplicando la definición anterior, debemos tenr en cuenta varios factores. En primer lugar la condición recae simultaneamente sobre la temperatura mínima y máxima por lo que debemos prestar atención a ambas series. Al mismo tiempo debemos comparar la temperatura de cada día en particular con los percentiles para ese día, o más en general, con las temperaturas esperables. Finalmente, los días deben ser consecutivos para formar una ola de extremos. 
+>>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
 
 La figura \ref{fig:graf1} muestra las series de temperaturas para el año 2012 (\textcolor{blue}{la serie es del 2012 o 2011 ???}) su la distribución de frecuencias. El gráfico tiene 3 capaz básicas, en primer lugar calculamos un histograma bidimensional en que los bins son hexágonos en el plano de $\{ y^n_{ta}, t$ (panel superior), la intensidad del color representa la frecuencia. Sobre el histograma se dibuja las series de temperatura observada para cada día en 2012 y finalmente se divide en dos paneles con la serie de mínima (superior) y máxima (inferior) por separado. 
 
@@ -473,12 +481,20 @@ Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente p
 \hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)}  \hlkwd{dlmModTrig}\hlstd{(}\hlkwc{s} \hlstd{=} \hlnum{365}\hlstd{,}\hlkwc{q}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{dV} \hlstd{=} \hlkwd{exp}\hlstd{(par),} \hlkwc{dW} \hlstd{=} \hlnum{0}\hlstd{)}
 
 \hlcom{# Estima el modelo para temp Minimas}
+<<<<<<< HEAD
 \hlstd{mod.tn} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tn'}\hlstd{)} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+=======
+\hlstd{mod.tn} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tn'}\hlstd{)} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{temp} \hlstd{= temp}\hlopt{-}\hlkwd{mean}\hlstd{(temp,} \hlkwc{na.rm} \hlstd{= T))} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+>>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
   \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
   \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
 
 \hlcom{# Estima el modelo para temp Maximas}
+<<<<<<< HEAD
 \hlstd{mod.tx} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tx'}\hlstd{)} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+=======
+\hlstd{mod.tx} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tx'}\hlstd{)} \hlopt{%>%} \hlkwd{mutate}\hlstd{(}\hlkwc{temp} \hlstd{= temp}\hlopt{-}\hlkwd{mean}\hlstd{(temp,} \hlkwc{na.rm} \hlstd{= T))} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+>>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
   \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
   \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
 \end{alltt}

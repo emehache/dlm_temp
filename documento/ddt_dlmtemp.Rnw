@@ -98,8 +98,13 @@ opts_chunk$set(echo=FALSE,message=F,warning = F,fig.align = "center",fig.height=
 <<paquetes,include=F>>=
 paquetes <- c("knitr","xtable","ggplot2","tidyverse","dlm", "lubridate")
 sapply(paquetes,require,character.only=T)
+<<<<<<< HEAD
 load(file = "documento/d1")
 load(file = "documento/d2") # datos completos para estanzuela
+=======
+load(file = "d1")
+load(file = "d2") # datos completos para estanzuela
+>>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
 @
 
 
@@ -173,8 +178,12 @@ La siguiente sección presenta los datos utilizados y una definición de ola de 
 
 \section{Los datos}
 
+<<<<<<< HEAD
 Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período 1951 a 2014. Definimos $\{Y^n_{t}\}$ y $\{Y^x_{t}\}$ la serie diaria de temperaturas mínima y máxima respectivamente.
 %Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
+=======
+Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período XXX a ZZZ. Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
+>>>>>>> 70c03a95a3bc2066a8784864f71f2f54a17143f5
 
 Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo durante la cual, la temperatura observada debe mantenerse por debajo del umbral definido. 
 
@@ -182,7 +191,7 @@ En el presente trabajo, hemos definido una ola de frío como un período de tiem
 
 $\begin{cases} y^n_{t_i} < p^n_{10_i}  \\ y^x_{t_i} < p^x_{10_i} \end{cases}$ para $i=1,\dots,k$
 
-Vizualizar fenómenos de olas de extremos no es trivial, aplicando la definición anterior, debemos tener en cuenta varios factores. En primer lugar la condición recae simultaneamente sobre la temperatura mínima y máxima por lo que debemos prestar atención a ambas series. Al mismo tiempo debemos comparar la temperatura de cada día en particular con los percentiles para ese día, o más en general, con las temperaturas esperables. Finalmente, los días deben ser consecutivos para formar una ola de extremos. 
+Vizualizar fenómenos de olas de extremos no es trivial, aplicando la definición anterior, debemos tenr en cuenta varios factores. En primer lugar la condición recae simultaneamente sobre la temperatura mínima y máxima por lo que debemos prestar atención a ambas series. Al mismo tiempo debemos comparar la temperatura de cada día en particular con los percentiles para ese día, o más en general, con las temperaturas esperables. Finalmente, los días deben ser consecutivos para formar una ola de extremos. 
 
 La figura \ref{fig:graf1} muestra las series de temperaturas para el año 2012 (\textcolor{blue}{la serie es del 2012 o 2011 ???}) su la distribución de frecuencias. El gráfico tiene 3 capaz básicas, en primer lugar calculamos un histograma bidimensional en que los bins son hexágonos en el plano de $\{ y^n_{ta}, t$ (panel superior), la intensidad del color representa la frecuencia. Sobre el histograma se dibuja las series de temperatura observada para cada día en 2012 y finalmente se divide en dos paneles con la serie de mínima (superior) y máxima (inferior) por separado. 
 
@@ -388,6 +397,21 @@ dd %>%
   scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
   theme_bw()
 @
+las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
+
+La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
+
+<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
+dd %>% 
+  select(t, y, theta) %>% 
+  mutate(filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
+  gather(tipo, estimacion, filtro, suave, pred1) %>% 
+  gather( serie, valor, -t, -tipo ) %>% 
+  ggplot(aes(x=t,y=valor,col=serie)) + geom_line() + 
+    facet_grid(tipo~.) +
+  scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
+  theme_bw()
+@
 
 
 
@@ -445,41 +469,26 @@ Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente p
 parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = exp(par), dW = 0)
 
 # Estima el modelo para temp Minimas
-mod.tn <- filter(d2, serie == 'Tn') %>% pull(temp) %>% 
+mod.tn <- filter(d2, serie == 'Tn') %>% 
+  mutate(temp = temp-mean(temp, na.rm = T)) %>% pull(temp) %>% 
   ts(start = c(1950, 1), frequency = 365) %>% 
   dlmMLE( parm = 0, build= parMLE)
 
 # Estima el modelo para temp Maximas
-mod.tx <- filter(d2, serie == 'Tx') %>% pull(temp) %>% 
+
+mod.tx <- filter(d2, serie == 'Tx') %>%
+  mutate(temp = temp-mean(temp, na.rm = T)) %>% pull(temp) %>%
+  pull(temp) %>% 
   ts(start = c(1950, 1), frequency = 365) %>% 
   dlmMLE( parm = 0, build= parMLE)
 @
 
 <<suavizados>>=
-smooth.tn <- d2 %>% filter(serie == 'Tn') %>% pull(temp) %>% 
-  ts(start = c(1950, 1), frequency = 365) %>% 
-  dlmSmooth(  parMLE(mod.tn$par) )
-
-zz <- d2 %>% filter(serie == 'Tn') %>% 
-  mutate(mn = mean(temp, na.rm = TRUE), 
-    yhat = apply(smooth.tn$s[-1, c(1,3)], 1, sum) + mn )
-
-smooth.tx <- d2 %>% filter(serie == 'Tx') %>% pull(temp) %>% 
-  ts(start = c(1950, 1), frequency = 365) %>% 
-  dlmSmooth(  parMLE(mod.tx$par) )
-
-res.long <- d2 %>% filter(serie == 'Tx') %>% 
-  mutate(mn = mean(temp, na.rm = TRUE), 
-         yhat = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
-  bind_rows(zz)
-@
-
-<<popurri>>=
-
 # obtener las olas de frio y calor
 get_wave <- function(x) {
   # x es un vector de 0 y 1, indicando si un dia cuenta como extremo (frio o calor)
   # hay que identificar rachas de 3 o mas lugares con x=1
+  x[is.na(x)] <- 0 # OJO !!!! 
   zz <- rle(x) %>% 
   lapply( as.vector ) %>% bind_cols() %>% 
   mutate( pos2 =  1 + cumsum(lengths), nn = n() ) %>% 
@@ -496,25 +505,58 @@ get_wave <- function(x) {
   out
 }
 
-res.wide <- d2 %>% filter(serie == 'Tx') %>% 
-  mutate(mn = mean(temp, na.rm = TRUE), 
-         yhat.tx = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
-  select( temp, fecha, yhat.tx) %>% 
-  inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
-  set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
-  mutate( dia.frio = as.numeric(yhat.tx > tx & yhat.tn > tn), 
-          dia.calor = as.numeric(yhat.tx < tx & yhat.tn < tn ) ) %>% 
-  mutate(ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
+sds_fn <- function(Slist, md) { 
+  lapply(Slist, function(x)  md$FF %*% x %*% t(md$FF ) + md$V ) %>% unlist() %>% sqrt()
+  }
+
+smooth.tn <- d2 %>% filter(serie == 'Tn') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmSmooth(  parMLE(mod.tn$par) )
+
+smooth.tx <- d2 %>% filter(serie == 'Tx') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmSmooth(  parMLE(mod.tx$par) )
+
+res.wide <- d2 %>% spread(serie, temp) %>% 
+  mutate( yhat.tn = apply( smooth.tn$s[-1,], 1, function(x)  parMLE(mod.tn$par)$FF %*% x)+mean(Tn, na.rm = T),
+          yhat.tn2 = apply( smooth.tn$s[-1,], 1, function(x)  parMLE(mod.tn$par)$FF %*% x),
+          yhat.tx = apply( smooth.tx$s[-1,], 1, function(x)  parMLE(mod.tx$par)$FF %*% x)+mean(Tx, na.rm = T),
+          sd.tn = sds_fn(  dlmSvd2var(smooth.tn$U.S[-1], smooth.tn$D.S[-1,]), parMLE(mod.tn$par) ),
+          sd.tx = sds_fn(  dlmSvd2var(smooth.tx$U.S[-1], smooth.tx$D.S[-1,]), parMLE(mod.tx$par) )) %>% 
+  mutate( dia.frio = as.numeric( (yhat.tx + sd.tx*qnorm(.1) > Tx) & (yhat.tn + sd.tn*qnorm(.1)) > Tn), 
+          dia.calor = as.numeric( (yhat.tx + sd.tx*qnorm(.9) < Tx) & (yhat.tn + sd.tn*qnorm(.9)) < Tn) ,
+          ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
+
+# zz <- d2 %>% filter(serie == 'Tn') %>% 
+#   mutate(mn = mean(temp, na.rm = TRUE), 
+#     yhat = apply(smooth.tn$s[-1, c(1,3)], 1, sum) + mn )
+# res.long <- d2 %>% filter(serie == 'Tx') %>% 
+#   mutate(mn = mean(temp, na.rm = TRUE), 
+#          yhat = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
+#   bind_rows(zz)
+# res.wide <- d2 %>% filter(serie == 'Tx') %>% 
+#   mutate(mn = mean(temp, na.rm = TRUE), 
+#          yhat.tx = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
+#   select( temp, fecha, yhat.tx) %>% 
+#   inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
+#   set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
+#   mutate( dia.frio = as.numeric(yhat.tx > tx & yhat.tn > tn), 
+#           dia.calor = as.numeric(yhat.tx < tx & yhat.tn < tn ) ) %>% 
+#   mutate(ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
+
+@
+
+<<popurri>>=
 
 # bolazos de resumen ....   
 aux <- res.wide %>% 
   filter(fecha > make_date(2010, 1, 1), fecha < make_date(2010, 12, 31))
 
 ggplot() +
-  geom_line(data= aux, aes(fecha, tn) ) + geom_line(data= aux, aes(fecha, tx) ) + 
+  geom_line(data= aux, aes(fecha, Tn) ) + geom_line(data= aux, aes(fecha, Tx) ) + 
   geom_line(data= aux, aes(fecha, yhat.tn),color='blue' ) + geom_line(data= aux, aes(fecha, yhat.tx),color='blue' ) + 
-  geom_point(data = filter(aux, ola.frio==1), aes(fecha, tn), color = 'red' ) +
-  geom_point(data = filter(aux, ola.frio==1), aes(fecha, tx), color = 'red' )
+  geom_point(data = filter(aux, ola.frio==1), aes(fecha, Tn), color = 'red' ) +
+  geom_point(data = filter(aux, ola.frio==1), aes(fecha, Tx), color = 'red' )
 
 res.wide %>% 
   mutate(year = year(fecha), month = month(fecha) ) %>% 
@@ -528,7 +570,7 @@ res.wide %>%
   filter(ola.frio == 1) %>% 
   group_by(year, month) %>% 
   summarise( tot.ola.frio = sum(ola.frio), 
-             temp.frio = mean(tn, na.rm=T) ) %>% 
+             temp.frio = mean(Tn, na.rm=T) ) %>% 
   ggplot() + 
   geom_line(aes(year, temp.frio) )  + 
   geom_smooth(aes(year, temp.frio) )  + 
@@ -538,13 +580,10 @@ res.wide %>%
   mutate(year = year(fecha), month = month(fecha) ) %>% 
   group_by(year, month) %>% 
   summarise( tot.ola.calor = sum(ola.calor), tot.ola.frio = sum(ola.frio), 
-             temp.frio = mean(tn * ola.frio, na.rm=T), temp.calor = mean(tx*ola.calor, na.rm = T) ) %>% 
+             temp.frio = mean(Tn * ola.frio, na.rm=T), temp.calor = mean(Tx*ola.calor, na.rm = T) ) %>% 
   ggplot() + geom_line(aes(year, tot.ola.frio) ) + geom_smooth( aes(year, tot.ola.frio) ) + 
   facet_wrap(~month)
 @
-
-
-
 
 El objeto \verb|Tn.filter$m| tendrá la estimación.
 % 
