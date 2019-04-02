@@ -88,15 +88,18 @@
 %********************************************%********************************************%********************************************
 
 <<setup,echo=F>>=
-opts_chunk$set(echo=FALSE,message=F,warning = F,fig.align = "center",fig.height=3,highlight = T,cache= T,echo=F)
+opts_chunk$set(echo=FALSE,message=F,warning = F,fig.align = "center",fig.height=3,highlight = T,echo=F)
+# ... me ha pasado que no es lo mas adecuado meter cache para todo indiscriminadamente, 
+# despues haces un cambio y no pasa nada y te rompes la cabeza de porque el codigo no esta funcionando ... es por el cache
+# nada, creo que es mejor incluir la opcion cache en los chunk individuales donde se precisa
 @
 
 
 <<paquetes,include=F>>=
-paquetes <- c("knitr","xtable","ggplot2","tidyverse","dlm")
+paquetes <- c("knitr","xtable","ggplot2","tidyverse","dlm", "lubridate")
 sapply(paquetes,require,character.only=T)
-load(file = "d1")
-load(file = "d2")
+load(file = "documento/d1")
+load(file = "documento/d2") # datos completos para estanzuela
 @
 
 
@@ -160,8 +163,28 @@ Contamos con datos de mediciones diarias de temperaturas mínimas y máximas, de
 Se define una ola de frío, como un período de tiempo en el cual, la temperatura observada es inferior a un umbral. El objetivo es determinar dicho umbral a través de la estimación del percentil 10 de las temperaturas. Utilizaremos los modelos lineales dinámicos para modelar la serie, y para la estimación de los percentiles.
 
 \section{Introducción}
+El estudio de eventos extremos ha tomado una gran relevancia en los últimos años debido principalmente al gran impacto que presentan en la sociedad y la economía de los países, así como en los ecosistemas. Dentro de la región del Sudeste de Sudamérica los principales eventos climáticos extremos que han sido analizados son los relacionados con la temperatura (olas de calor y de frío, heladas, días cálidos, etc) y a la precipitación (sequías, precipitaciones intensas, etc). Muchos de estos estudios son relativamente actuales, debido principalmente a que es necesario contar con series temporales lo suficientemente largas y fundamentalmente completas, a un paso temporal de por lo menos un día y de alta calidad. 
 
-El estudio de las temperaturas extremas ... bla bla
+Bajo el escenario de cambio climático, es necesario comprender cómo los eventos extremos cambian en frecuencia y/o intensidad, identificando cómo se han comportado en las últimas 3 o 4 décadas. Identificar este tipo de eventos ayudará a comprender su dinámica para luego realizar previsiones a un plazo menor asociado a la variabilidad climática y hasta incluso estudiar el comportamiento a escala sinóptica o de días. Uruguay cuenta con registros suficientemente largos en ciertos puntos del país, pero se han detectado muchos períodos sin información, tanto para temperaturas extremas diarias como para la variable precipitación (Renom, 2009; Amiel, 2012)
+
+En este trabajo se presenta la estimación y caracterización de olas de frio en una estación meteorológica basadas en modelos dinámicos de la serie de temperaturas diarias máximas y mínimas en dicha estación. 
+
+La siguiente sección presenta los datos utilizados y una definición de ola de frío. Luego, en la sección \ref{DLM} introducimos la familia de Modelos Lineales Dinámicos, que fueron usados para modelar los datos, así como la estimación de los percentiles. En la sección \ref{implementacionR} mostramos la implementación en \textbf{R} de la estimación de un modelo simulado. En la sección \ref{DLMtemp} aplicamos la metodología descripta a los datos de temperaturas de Uruguay y presentamos los resultados.
+
+\section{Los datos}
+
+Contamos con información de la temperatura máxima y mínima diaria en la estación meteorológica Estanzuela para el período 1951 a 2014. Definimos $\{Y^n_{t}\}$ y $\{Y^x_{t}\}$ la serie diaria de temperaturas mínima y máxima respectivamente.
+%Definimos $\{Y^n_{at}\}$ y $\{Y^x_{at}\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para $t \in \{1,\dots, 365\}$ y $a \in \{1950,\dots, 2014\}$ (\textcolor{blue}{te parece bien esta notación?? si es asi hay que adaptar todo lo demás a esto})
+
+Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo durante la cual, la temperatura observada debe mantenerse por debajo del umbral definido. 
+
+En el presente trabajo, hemos definido una ola de frío como un período de tiempo mayor o igual a 3 días, en los cuales las temperaturas mínimas y máximas son inferiores a los respectivos percentiles 10 esperados para tales días. Definimos el percentil 10 de mínima como $p^n_{10_t}:= \inf\{y: \p(Y^n_t \leq y)\geq 0.1\}$. Análogamente definimos el percentil 10 de máxima para el día $t$ como $p^x_{10_t}:= \inf\{y: \p(Y^x_t \leq y)\geq 0.1\}$. Podemos decir entonces que una sucesión de días $t_1, \dots, t_k$ constituyen una ola de frío de largo $k$ si, siendo $k\geq 3$, se cumple simultáneamente que:
+
+$\begin{cases} y^n_{t_i} < p^n_{10_i}  \\ y^x_{t_i} < p^x_{10_i} \end{cases}$ para $i=1,\dots,k$
+
+Vizualizar fenómenos de olas de extremos no es trivial, aplicando la definición anterior, debemos tener en cuenta varios factores. En primer lugar la condición recae simultaneamente sobre la temperatura mínima y máxima por lo que debemos prestar atención a ambas series. Al mismo tiempo debemos comparar la temperatura de cada día en particular con los percentiles para ese día, o más en general, con las temperaturas esperables. Finalmente, los días deben ser consecutivos para formar una ola de extremos. 
+
+La figura \ref{fig:graf1} muestra las series de temperaturas para el año 2012 (\textcolor{blue}{la serie es del 2012 o 2011 ???}) su la distribución de frecuencias. El gráfico tiene 3 capaz básicas, en primer lugar calculamos un histograma bidimensional en que los bins son hexágonos en el plano de $\{ y^n_{ta}, t$ (panel superior), la intensidad del color representa la frecuencia. Sobre el histograma se dibuja las series de temperatura observada para cada día en 2012 y finalmente se divide en dos paneles con la serie de mínima (superior) y máxima (inferior) por separado. 
 
 <<graf1,fig.height=4,fig.cap="Gráfico">>=
 #d1 <- serie[(365*62):(365*63),] %>% select(-(Tn.pred:ola)) %>% gather(serie,temp,-dia,-year,-fecha)
@@ -173,32 +196,40 @@ El estudio de las temperaturas extremas ... bla bla
 
 #ggplot(d1,aes(x=dia,y=temp,group=serie))+geom_line()+facet_grid(serie~.)+geom_boxplot(data = d2,aes(x=dia,y=temp,col=serie,group=dia),size=.5,alpha=0.1)
 
-plot1 <- ggplot()+geom_boxplot(data = d2,aes(x=dia,y=temp,col=serie),size=0.5,alpha=0.1)+facet_grid(serie~.,scales="free_y")+geom_line(data=d1,aes(x=dia,y=temp,group=serie))+annotate("rect", xmin="06-05", xmax="06-09", ymin=-4 , ymax=30, alpha=0.2, color=NA, fill="blue")
- 
-d3 <- plot1$layers[[3]]$data
-d3 <- rbind(d3,d3)
-d3 <- cbind(d3,serie=c("Tn","Tx"))
-d3[1,3:4] <- c(-2,20)
-d3[2,3:4] <- c(5,28)
+# -------------------
+# plot1 <- ggplot()+geom_boxplot(data = d2,aes(x=dia,y=temp,col=serie),size=0.5,alpha=0.1)+facet_grid(serie~.,scales="free_y")+geom_line(data=d1,aes(x=dia,y=temp,group=serie))+annotate("rect", xmin="06-05", xmax="06-09", ymin=-4 , ymax=30, alpha=0.2, color=NA, fill="blue")
+# 
+# d3 <- plot1$layers[[3]]$data
+# d3 <- rbind(d3,d3)
+# d3 <- cbind(d3,serie=c("Tn","Tx"))
+# d3[1,3:4] <- c(-2,20)
+# d3[2,3:4] <- c(5,28)
+# 
+# plot1$layers[[3]]$data <- d3
+# plot1
 
-plot1$layers[[3]]$data <- d3
-plot1
+# ------------------------
+# Buen dibujo !!! 
+# la misma idea trate de mejorarlo ... a ver si te gusta
+una.ola <- data.frame( serie = 'Tn', xn=156, xx=160, yn=-2, yx=20 ) %>% 
+  bind_rows( data.frame( serie = 'Tx', xn=156, xx=160, yn=5, yx=28 ) )
+
+d2 %>% mutate(dia2 = yday(fecha)) %>% 
+  ggplot() + 
+  geom_hex(aes(x=dia2, y=temp) ) +  
+  geom_line(data = mutate(d1, dia2 = yday(fecha)),  aes(x=dia2,y=temp,group=serie)) +
+  geom_rect( data = una.ola, 
+             aes(xmin=xn, xmax=xx, ymin=yn , ymax=yx), 
+             alpha=0.2, color=NA, fill="red") + 
+  facet_grid(serie~., scales = 'free_y') +
+  scale_fill_gradient(name='Frequence', high = '#034e7b', low = '#f1eef6') +
+  theme_bw()
 @
+\textcolor{blue}{en la figura: caption con descripcion, nombres de los ejes y la etiqueta de color, nombres de los paneles}
 
-En la figura \ref{fig:graf1} se grafica la serie de temperaturas (máxima y mínima) para el año 2012, y de fondo aparecen gráficos de caja con la distribución de la temperatura para cada día. En los días señalados en azul (del 5 al 9 de junio de 2012), se nota que la temperatura observada se acerca a la cola inferior de la distribución para ese día. Eso nos indica que ese día fue bastante más frio de lo esperado, más aún, es muy raro observar la temperatura que se observó en dicho período. Podemos considerar que durante esos días estuvimos ante la presencia de una ola de frío. ... bla bla ... Veremos una definición más precisa de ola de frío ... 
+El período de días del 5 al 9 de junio de 2012 (señalado en rojo en la Figura \ref{fig:graf1}) la temperatura observada se acerca a la cola inferior de la distribución para ese día. Eso indica que ese período fue bastante más frio de lo esperado, podemos considerar que durante esos días estuvimos ante la presencia de una \textit{ola de frío}. 
 
-Existen diversas formas de caracterizar una racha de frío, que responden a distintas aplicaciones de su estudio. Las diversas definiciones acuerdan en la necesidad de establecer un umbral de bajas temperaturas (puede ser absoluto o relativo) y en delimitar una ventana de tiempo durante la cual, la temperatura observada debe mantenerse por debajo del umbral definido.
-
-
-
-Para el presente trabajo, hemos definido una ola de frío como un período de tiempo mayor o igual a 3 días, en los cuales las temperaturas mínimas y máximas son inferiores a los respectivos percentiles 10 esperados para tales días.
-
-Esta definición requiere de definir para cada día del año un percentil 10 de temperatura mínima y máxima. Siendo $\{Y^n_t\}$ y $\{Y^x_t\}$ la serie diaria de temperaturas mínima y máxima respectivamente, para cada $t \in \{1,\dots, 365\}$ definimos el percentil 10 de mínima como $p^n_{10_t}:= \inf\{y: \p(Y^n_t \leq y)\geq 0.1\}$. Análogamente definimos el percentil 10 de máxima para el día $t$ como $p^x_{10_t}:= \inf\{y: \p(Y^x_t \leq y)\geq 0.1\}$.
-
-Podemos decir entonces que una sucesión de días $t_1, \dots, t_k$ constituyen una ola de frío de largo $k$ si, siendo $k\geq 3$, se cumple simultáneamente que:
-$\begin{cases} y^n_{t_i} < p^n_{10_i}  \\ y^x_{t_i} < p^x_{10_i} \end{cases}$ para $i=1,\dots,k$
-
-En la sección \ref{DLM} introducimos la familia de Modelos Lineales Dinámicos, que fueron usados para modelar los datos, así como la estimación de los percentiles. En la sección \ref{implementacionR} mostramos la implementación en \textbf{R} de la estimación de un modelo simulado. En la sección \ref{DLMtemp} aplicamos la metodología descripta a los datos de temperaturas de Uruguay y presentamos los resultados.
+\textcolor{blue}{comentario de cierre??}
 
 \section{Modelos lineales dinámicos}\label{DLM}
 
@@ -207,25 +238,19 @@ En la sección \ref{DLM} introducimos la familia de Modelos Lineales Dinámicos,
 %Un modelo estadístico de posición, establece que hay un parámetro del cual tenemos observaciones ruidosas. %Podemos extender esa idea, y considerar que tenemos obervaciones ruidosas de un
 %Podemos extender la idea de parámetro 
 
-Un modelo lineal dinámico (DLM) considera una serie de tiempo ($Y_t$), como una observación ruidosa de un proceso dinámico no observable ($\theta_t$). El modelo está definido a través de una ecuación de evolución y una ecuación de observación. La ecuación de evolución responde a la dinámica del proceso estocástico: define cómo se vincula el estado del proceso en tiempo $t$ con su estado en tiempo $t+1$.
+Los modelos lineales dinámicos (DLM) son una familia de modelos que constituye una subclase de los llamados modelos de espacio de estado. En DLM se considera una serie de tiempo, $Y_t$, como una observación ruidosa de un proceso dinámico no observable $\theta_t$. Estos modelos se definen a través de dos ecuaciones básicas: una \textit{ecuación de evolución} y una \textit{ecuación de observación}. La estructura general de un DLM se muestra en \eqref{ecu.obs} y \eqref{ecu.evo} donde $F_t$ $G_t$ son dos matrices conocidas de orden $p\times p$ y $m\times p$ respectivamente que caracterizan al modelo, las perturbaciones $v_t$ y $w_t$ son son secuencias de vectores gausianos independientes, mientras que $V_t,W_t$ serán los parámetros que caractericen el modelo. Adicionalmete, se agrega una previa Normal para el momento inicial, es decir $\theta_0 \sim N(m_0, C_0)$. 
 
-La ecuación de observación, explicita cómo es observado el proceso en tiempo $t$ dado el estado en el que se encuentra a tiempo $t$. En ambas ecuaciones, se puede introducir una componente aleatorio. Un diagrama de esto se puede ver en la figura \ref{diagrama}.
+\begin{eqnarray}
+\label{ecu.obs} Y_t&= F_t\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,V_t) \\
+\label{ecu.evo} \theta_t &= G_t \theta_{t-1} + w_t \;&\; w_t \sim \mathcal{N}(0,W_t)
+%\label{eq:modelo}
+\end{eqnarray} 
 
-Tenemos entonces la siguiente expresión para el modelo:
-%\begin{center}
-%$\begin{array}{lc}
-%Y_t=F_t\theta_t + v_t  &  v_t \sim \mathcal{N}(0,V_t) \\
-%\theta_t = G_t \theta_{t-1} + w_t \;\; & w_t \sim \mathcal{N}(0,W_t)
-%\end{array}$
-%\end{center}
-\begin{equation}
-\begin{aligned}
-Y_t&=F_t\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,V_t) \\
-\theta_t &= G_t \theta_{t-1} + w_t \;&\; w_t \sim \mathcal{N}(0,W_t)
-\end{aligned}
-\label{eq:modelo}
-\end{equation} donde las matrices $F_t,G_t,V_t,W_t$ serán los parámetros que caractericen el modelo. $\mathcal{N}$ es la distribución normal.
+La ecuación de evolución responde a la dinámica del proceso estocástico: define cómo se vincula el estado del proceso en tiempo $t$ con su estado en tiempo $t+1$. Por otro lado, la ecuación de observación, explicita cómo es observado el proceso en tiempo $t$ dado el estado en el que se encuentra a tiempo $t$. En ambas ecuaciones, se puede introducir una componente aleatorio. 
 
+\subsection{Estructura de un DLM}
+
+La estructura de depencia entre las observaciones es un aspecto clave para entender como funcionan los DLM. Al igual que la clase maás general de modelos espacio-estado en los DLM se basa en dos supuestos fundamentales. En primer lugar se asume  que el proceso inobservable o proceso de estado $\theta_t$ consituye una cadena de Markov.  En tanto, las observaciones $Y_t$ son condicionalmente independientes dado $\theta_t$ y se asume que $Y_t$ depende únicamente de $\theta_t$. 
 
 \begin{center}
 \begin{tikzpicture}[->, >=stealth', auto, semithick, node distance=3cm]
@@ -257,9 +282,65 @@ Y_t&=F_t\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,V_t) \\
 \captionof{figure}{Diagrama de evolución y observación del proceso}\label{diagrama}
 \end{center}
 
-Si se tiene las observaciones $y_1,\dots,y_T$, puede ser de interés obtener una estimación de $\E(\theta_t | y_1,\dots,y_t)$, es decir, el valor esperado del proceso que subyace a las observaciones en tiempo $t$, dado que tenemos las observaciones pasadas. Esta cantidad es estimada mediante el Filtro de Kalman.
+La figura \ref{diagrama} representa un diagrama de la estructura de depndencia en DLM, donde los arcos indican dependencia estadistica. Se puede ver como  $\theta_t$, toda la dependencia entre observaciones pasa a través del proceso latente. A partir de esta estructura, se puede considerar que las observaciones representan una medida ruidosa el proceso de estado.
 
-La figura \ref{fig:graf7} muestra un ejemplo simulado de un proceso univariado concebido de esta forma, bajo el modelo descripto en \eqref{dlm_sim}. Así mismo, se muestra la estimación del proceso $\theta_t$ obtenida a través de la implementación del filtro de Kalman en \textbf{R}.
+La principal consecuencia de la estructura de dependencia es que la distribucion conjunta de todas las variables de interes queda determinada por la distribucion previa del estado inicial y las densidades condicionales $p(\theta_t | \theta_{t-1})$, $p(y_t|\theta_t)$, de forma: 
+\[
+p(\theta_{0:t}, y_{1:t}) =  p(\theta_0) \prod_{j=1}^t  p(\theta_j | \theta_{j-1})  p(y_j|\theta_j)
+\]
+
+La famillia de DLM es amplia y flexible, muchos modelos estadisticos para datos temporales pueden verse como casos partiulares de esta familia o de la clase mas general de modelos espacio-estados. En particular los modelos ARMA con ruido gaussiano son equivalentes a DLM cuando los parametros $F_t, G_t, V_t, W_t$ son constantes en el tiempo. Por ejemplo, el proceso  AR(2): $y_t = \phi_1 y_{t-1} + \phi_2 y_{t-2} + e_t$, puede ser visto como un DLM si definimos $\theta_t = 
+\begin{pmatrix}
+\theta_{1,t} \\
+\theta_{2,t}
+\end{pmatrix}
+$
+y luego, 
+
+\[ \begin{array}{rl}
+y_t = & \begin{bmatrix}
+1 \\
+0
+\end{bmatrix}
+\theta_t = \theta_{1,t} \\
+& \\
+\theta_t = \begin{pmatrix} \theta_{1,t} \\ \theta_{2,t} \end{pmatrix} = &
+\begin{bmatrix} \phi_1 & 1 \\ \phi_2 & 0 \end{bmatrix}
+\begin{pmatrix} \theta_{1,t-1} \\ \theta_{2,t-1} \end{pmatrix}
++
+\begin{bmatrix} e_t \\ 0 \end{bmatrix}
+\end{array}
+\]
+para ver la equivalencia entre ambas representaciones, debemos operar en la segunda ecuación, que representa la evolución del proceso latente y verificar que se verifica que $\theta_{1,t} = \phi_1 \theta_{1,t-1} + \phi_2 \theta_{1,t-2} + e_t$. Ver CITA.LIBRO (sección 3.2.5) por más detalles en la correspondencia entre modelos ARIMA($p$, $d$, $q$) y DLM. 
+
+Aparte de DLM, la familia de modelos espacio-estados admite modelos no lineales y el uso de otras distribuciones no Gausianas. Por ejemplo, modelos para las distribuciones de la familia exponencial pueden ser especificados para tener DLMG \textit{generalizados}, por otro lado en casos uqe el proceso de estados tenga una distribucion discreta el modelo es referido como modelos ocultos de MArkov, tambien modelos de volatilidad estocastica pueden ser vistos como espacio-estados. El estudio de DLM entonces, es relevante pues permite introucirnos al trabajo con una familia de modelos que es muy amplica y puede aplicarse en una gran variedad de problemas concretos. 
+
+
+%\begin{center}
+%$\begin{array}{lc}
+%Y_t=F_t\theta_t + v_t  &  v_t \sim \mathcal{N}(0,V_t) \\
+%\theta_t = G_t \theta_{t-1} + w_t \;\; & w_t \sim \mathcal{N}(0,W_t)
+%\end{array}$
+%\end{center}
+
+\subsection{Estimacion del proceso de estados}
+
+Si se tienen las observaciones $y_1,\dots,y_T$, y se asume un modelo como el descripto por las ecuaciones \eqref{ecu.obs} y \eqref{ecu.evo}, hay varias distribuciones posteriores que puede ser de interes. En relacion al proceso no observable se distinguen tres distribuciones relevantes condicional en los datos observados: filtrada, suavisada y de prediccion. 
+
+La \textbf{distribucion filtrada} (filtering distribution en ingles) consiste en la distribucion posteiror del estado no observable $\theta_t$ dada la informacion observada hasta ese mismo momento, es decir $p(\theta_t | y_1, \ldots, y_t)$, se tiene una distribucion para cada momento $t$. La posterior filtrada es de principal interes en aplicaciones secuenciales donde es necesario realizar una nueva estimacion para cada observacion nueva. En el caso de modelos DLM, donde operan las restricciones de normalidad y linealidad, es posible tener soluciones cerradas para $p(\theta_t | y_1, \ldots, y_t)$ mediante el Filtro de Kalman (REF??) \textcolor{blue}{es necesario incluir las formulas de recursion para estimar esto??}
+
+Una segunda distribucion posterior que puede tener relevancia en aplicaciones es la \textbf{distribucion suavizada} (smoothing distribution en ingles) del proceso de estados. La distribucion suavizada consiste en $p(\theta_t | y_1, \ldots, y_T)$, es similar a la posterior filtrada con la diferencia que el condicional se realiza sobre todos los datos observados disponibles. La distribucion suavizada es relevante para aplicaciones donde estamos interesados en un estudio retrospectivo y se desea analizar todo el proceso de estados latente. \textcolor{blue}{a nosotros no deberia interesarnos mas smoothing que filtering ???}
+
+\textcolor{blue}{estimacion de los parametros de varianza? MLE.. otra forma?}
+
+En caso que estemos interesados en predecir un valor futuro del estado se utilizan distribuciones de prediccion $p(\theta_{t+k} | y_1, \ldots, y_t)$. \textcolor{blue}{expandir y comentar sobre predictiva de observaciones}
+
+\textcolor{blue}{Incluir tratamiento de datos faltantes, caapz que para que se entienda son necesarias incluir formulas para calcular filtering y smoothing}
+
+
+\subsection{Un ejemplo simulado \label{implementacionR} }
+%\subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
+En lo que sigue se ilustra la estimación de DLM mediante un ejemplo simulado de un proceso simple y su estimación mediante la biblioteca \verb|dlm| (CITA??) que permite trabajar con toda la familia de modelos lineales dinámicos. La ecuación \eqref{dlm_sim} muestra el modelo usado para simular datos,  en este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso de estado $\{\theta_t\}$ describe un paseo al azar, mientras que podemos considerar a $\{y_t\}$ como una observación ruidosa de $\{\theta_t\}$. El objetivo será recumerar los valores de los parámetros de varianzas y el proceso de estado. \textcolor{blue}{notar que no es estacionario...}
 
 \begin{equation}
 \begin{aligned}
@@ -269,35 +350,53 @@ Y_t&=\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,0.1^2) \\
 \label{dlm_sim}
 \end{equation}
 
-En este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso $\{\theta_t\}$ describe un paseo al azar, mientras que podemos considerar a $\{y_t\}$ como una observación ruidosa de $\{\theta_t\}$
+El siguiente código de  \textbf{R} realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman. 
+<<echo=TRUE>>=
+# Obtenemos estados y datos simulados
+set.seed(1237); N <- 100
+
+dd <- data_frame(t = seq(0,1, length.out = N), w = rnorm(N,0,.1), v = rnorm(N,0,.3) ) %>% 
+  mutate( theta = cumsum(w), y = ts(theta + v) )
+
+# Función para estimar varianzas por Max.Ver
+parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])
+modPoly <- dlmMLE(dd$y,parm = c(1,1),build = parMLE)
+
+# Kalman filter y Kalman smoother
+mod_filter <- dlmFilter(dd$y, parMLE(modPoly$par))
+mod_smooth <- dlmSmooth(mod_filter)
+@
+
+En primer lugar, es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados. 
+
+Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener estimaciones de la esperanza posterior, 
+<<>>=
+str(mod_filter, max.level = 1)
+@
+las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
+
+La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
+
+<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
+dd %>% 
+  select(t, y, theta) %>% 
+  mutate(filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
+  gather(tipo, estimacion, filtro, suave, pred1) %>% 
+  gather( serie, valor, -t, -tipo ) %>% 
+  ggplot(aes(x=t,y=valor,col=serie)) + geom_line() + 
+    facet_grid(tipo~.) +
+  scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
+  theme_bw()
+@
+
+
 
 \definecolor{theta}{HTML}{F8766F}
 \definecolor{ye}{HTML}{7CAE00}
 \newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
 \newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
 
-<<>>=
-set.seed(1237)
-N <- 100
-t <- seq(0,1,,N)
-w <- rnorm(N,0,.1)
-v <- rnorm(N,0,.3)
-theta <- cumsum(w)
-y <- theta+v
-y <- ts(y)
-@
-
-
-<<>>=
-parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])
-modPoly <- dlmMLE(y,parm = c(1,1),build = parMLE)
-mod_filter <- dlmFilter(y, parMLE(modPoly$par))
-#plot(t,theta,type="l")
-#lines(t,mod_filter$m[-1],col=2)
-@
-
-
-<<graf7,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.">>=
+<<graf7,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", eval=FALSE>>=
 myguide <- guide_legend(keywidth = unit(1, "cm"))
 
 data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %>% 
@@ -305,34 +404,11 @@ data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %
   ggplot()+aes(x=t,y=valor,col=serie,alpha=tipo)+geom_line()+
   scale_alpha_discrete(range = c(.5,1),guide=F)+scale_color_manual(values=c("theta"='#F8766F',"y"='#7CAE00',"estimacion"="#9999CC"),guide=myguide)+theme_bw()
 @
-
 % \vspace{-.75em}
 % \captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado y su estimación. %En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.
 % }
 % \label{fig:graf7}
 
-\subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
-%\texorpdfstring
-
-
-El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
-
-Lo primero es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros: \\
-\verb|parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])|. En nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación.
-
-En este caso, si el objeto \verb|y| contiene la serie de datos, la función \verb|dlmMLE| devolverá el modelo, con los parámetros estimados:\\
-\verb|mod<- modPoly <- dlmMLE(y,parm = c(1,1),build = parMLE)|
-
-Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter|) para obtener estimaciones de la esperanza \textit{a posteriori}:\\
-\verb|mod_filter <- dlmFilter(y, parMLE(modPoly$par))|
-
-
-<<echo=T,eval=F>>=
-parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])
-modPoly <- dlmMLE(y,parm = c(1,1),build = parMLE)
-mod_filter <- dlmFilter(y, parMLE(modPoly$par))
-mof_filter$m
-@
 
 
 \section{Modelo estacional para el modelado de temperaturas}\label{DLMtemp}
@@ -358,17 +434,117 @@ Como se explicó anteriormente, para caracterizar olas de frío debemos estimar 
 
 En este trabajo, para la estimación de tales percentiles, nos valdremos de la distribución de $\theta_t | \{y_1,\dots,y_t\}$. Se puede probar que, bajo el modelo descripto en la expresión (\ref{eq:modelo}), se cumple que $\theta_t | \{y_1,\dots,y_t\} \sim \mathcal{N}(m_t,C_t)$, y $y_t|\theta_t \sim \mathcal{N}(Fm_t,FC_tF^T + \text{v}_t)$. El filtro de Kalman nos devuelve las secuencias $(m_t)_{1\leq t \leq T}$ y $(C_t)_{1\leq t \leq T}$ para la serie de temperaturas mínimas y máximas. Por tanto, el estimador para el percentil 10 de mínima para el día $t$ será $\hat{p}^n_{10_t}:=Fm_t+\sqrt{FC_tF^T + \text{v}_t}\times \Phi(0.10)$, donde $\Phi(x)=\p(X\leq x)$ con $X\sim N(0,1)$. Análogamente se hace lo mismo para el percentil 10 de temperaturas máximas.
 
-\section{Implementación en R - paquete `dlm'}
+%\section{Implementación en R - paquete `dlm'}
+\section{Resultados}
 
 % El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de 
 
 Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
-<<echo=T,eval=F>>=
-parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = par, dW = 0)
-mod<- dlmMLE(y,parm = 16,build= parMLE)
-Tn.filter <- dlmFilter(y,parMLE(mod$par))
+<<estima.modelos, echo=T, cache=TRUE>>=
+parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = exp(par), dW = 0)
+
+# Estima el modelo para temp Minimas
+mod.tn <- filter(d2, serie == 'Tn') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmMLE( parm = 0, build= parMLE)
+
+# Estima el modelo para temp Maximas
+mod.tx <- filter(d2, serie == 'Tx') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmMLE( parm = 0, build= parMLE)
 @
+
+<<suavizados>>=
+smooth.tn <- d2 %>% filter(serie == 'Tn') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmSmooth(  parMLE(mod.tn$par) )
+
+zz <- d2 %>% filter(serie == 'Tn') %>% 
+  mutate(mn = mean(temp, na.rm = TRUE), 
+    yhat = apply(smooth.tn$s[-1, c(1,3)], 1, sum) + mn )
+
+smooth.tx <- d2 %>% filter(serie == 'Tx') %>% pull(temp) %>% 
+  ts(start = c(1950, 1), frequency = 365) %>% 
+  dlmSmooth(  parMLE(mod.tx$par) )
+
+res.long <- d2 %>% filter(serie == 'Tx') %>% 
+  mutate(mn = mean(temp, na.rm = TRUE), 
+         yhat = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
+  bind_rows(zz)
+@
+
+<<popurri>>=
+
+# obtener las olas de frio y calor
+get_wave <- function(x) {
+  # x es un vector de 0 y 1, indicando si un dia cuenta como extremo (frio o calor)
+  # hay que identificar rachas de 3 o mas lugares con x=1
+  zz <- rle(x) %>% 
+  lapply( as.vector ) %>% bind_cols() %>% 
+  mutate( pos2 =  1 + cumsum(lengths), nn = n() ) %>% 
+  mutate(pos = c(1, lag(pos2)[-1] ) ) %>% 
+  select(-pos2, -nn) %>% 
+  filter( values == 1, lengths > 2)
+  
+  out <- rep(0, length(x) )
+  
+  for( i in 1:nrow(zz) ) {
+    start <- zz$pos[i]; end <- start + zz$lengths[i]-1
+    out[start:end] <- 1
+  }
+  out
+}
+
+res.wide <- d2 %>% filter(serie == 'Tx') %>% 
+  mutate(mn = mean(temp, na.rm = TRUE), 
+         yhat.tx = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
+  select( temp, fecha, yhat.tx) %>% 
+  inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
+  set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
+  mutate( dia.frio = as.numeric(yhat.tx > tx & yhat.tn > tn), 
+          dia.calor = as.numeric(yhat.tx < tx & yhat.tn < tn ) ) %>% 
+  mutate(ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
+
+# bolazos de resumen ....   
+aux <- res.wide %>% 
+  filter(fecha > make_date(2010, 1, 1), fecha < make_date(2010, 12, 31))
+
+ggplot() +
+  geom_line(data= aux, aes(fecha, tn) ) + geom_line(data= aux, aes(fecha, tx) ) + 
+  geom_line(data= aux, aes(fecha, yhat.tn),color='blue' ) + geom_line(data= aux, aes(fecha, yhat.tx),color='blue' ) + 
+  geom_point(data = filter(aux, ola.frio==1), aes(fecha, tn), color = 'red' ) +
+  geom_point(data = filter(aux, ola.frio==1), aes(fecha, tx), color = 'red' )
+
+res.wide %>% 
+  mutate(year = year(fecha), month = month(fecha) ) %>% 
+  filter(ola.frio == 1) %>% 
+  group_by(year, month) %>% 
+  summarise( ola.calor = sum(ola.calor), ola.frio = sum(ola.frio) ) %>% 
+  ggplot() + geom_tile(aes(year,month, fill = ola.frio) ) 
+
+res.wide %>% 
+  mutate(year = year(fecha), month = month(fecha) ) %>% 
+  filter(ola.frio == 1) %>% 
+  group_by(year, month) %>% 
+  summarise( tot.ola.frio = sum(ola.frio), 
+             temp.frio = mean(tn, na.rm=T) ) %>% 
+  ggplot() + 
+  geom_line(aes(year, temp.frio) )  + 
+  geom_smooth(aes(year, temp.frio) )  + 
+  facet_wrap(~month, scales = 'free_y')
+
+res.wide %>% 
+  mutate(year = year(fecha), month = month(fecha) ) %>% 
+  group_by(year, month) %>% 
+  summarise( tot.ola.calor = sum(ola.calor), tot.ola.frio = sum(ola.frio), 
+             temp.frio = mean(tn * ola.frio, na.rm=T), temp.calor = mean(tx*ola.calor, na.rm = T) ) %>% 
+  ggplot() + geom_line(aes(year, tot.ola.frio) ) + geom_smooth( aes(year, tot.ola.frio) ) + 
+  facet_wrap(~month)
+@
+
+
+
 
 El objeto \verb|Tn.filter$m| tendrá la estimación.
 % 
@@ -396,7 +572,7 @@ Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter
 
 En la figura \ref{fig:graf6} se muestra en un período de tres años, las series de mínima y máxima y la estimación de su valor esperado mediante el filtro de Kalman.
 
-\section{Resultados}
+%\section{Resultados}
 
 \begin{center}
 \includegraphics[width=.45\textwidth ,height=15em]{graf6.png}
