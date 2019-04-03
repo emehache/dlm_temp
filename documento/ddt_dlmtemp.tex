@@ -1,4 +1,54 @@
-\documentclass[12pt]{article}
+\documentclass[12pt]{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
 \usepackage[utf8]{inputenc} 
 \usepackage{amsmath,amsfonts,amssymb,amsthm}
 \usepackage[spanish, es-tabla]{babel}
@@ -87,26 +137,12 @@
 
 %********************************************%********************************************%********************************************
 
-<<setup,echo=F>>=
-opts_chunk$set(echo=FALSE,message=F,warning = F,fig.align = "center",fig.height=3,highlight = T,echo=F)
-# ... me ha pasado que no es lo mas adecuado meter cache para todo indiscriminadamente, 
-# despues haces un cambio y no pasa nada y te rompes la cabeza de porque el codigo no esta funcionando ... es por el cache
-# nada, creo que es mejor incluir la opcion cache en los chunk individuales donde se precisa
-@
 
 
-<<paquetes,include=F>>=
-paquetes <- c("knitr","xtable","ggplot2","tidyverse","dlm", "lubridate")
-sapply(paquetes,require,character.only=T)
-
-# load(file = "documento/d1")
-# load(file = "documento/d2") # datos completos para estanzuela
-
-load(file = "d1")
-load(file = "d2") # datos completos para estanzuela
-@
 
 
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 \begin{document}
 	
 	\thispagestyle{empty} 
@@ -191,45 +227,18 @@ Vizualizar fenómenos de olas de extremos no es trivial, aplicando la definició
 
 La figura \ref{fig:graf1} muestra las series de temperaturas para el año 2012 (\textcolor{blue}{la serie es del 2012 o 2011 ???}) su la distribución de frecuencias. El gráfico tiene 3 capaz básicas, en primer lugar calculamos un histograma bidimensional en que los bins son hexágonos en el plano de $\{ y^n_{ta}, t$ (panel superior), la intensidad del color representa la frecuencia. Sobre el histograma se dibuja las series de temperatura observada para cada día en 2012 y finalmente se divide en dos paneles con la serie de mínima (superior) y máxima (inferior) por separado. 
 
-<<graf1,fig.height=4,fig.cap="Gráfico">>=
-#d1 <- serie[(365*62):(365*63),] %>% select(-(Tn.pred:ola)) %>% gather(serie,temp,-dia,-year,-fecha)
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
 
-#d2 <- serie %>% select(dia:Tx) %>% gather(serie,temp,-dia,-fecha,-year)
+{\centering \includegraphics[width=\maxwidth]{figure/graf1-1} 
 
-#save(file="d1",d1)
-#save(file="d2",d2)
+}
 
-#ggplot(d1,aes(x=dia,y=temp,group=serie))+geom_line()+facet_grid(serie~.)+geom_boxplot(data = d2,aes(x=dia,y=temp,col=serie,group=dia),size=.5,alpha=0.1)
+\caption[Gráfico]{Gráfico}\label{fig:graf1}
+\end{figure}
 
-# -------------------
-# plot1 <- ggplot()+geom_boxplot(data = d2,aes(x=dia,y=temp,col=serie),size=0.5,alpha=0.1)+facet_grid(serie~.,scales="free_y")+geom_line(data=d1,aes(x=dia,y=temp,group=serie))+annotate("rect", xmin="06-05", xmax="06-09", ymin=-4 , ymax=30, alpha=0.2, color=NA, fill="blue")
-# 
-# d3 <- plot1$layers[[3]]$data
-# d3 <- rbind(d3,d3)
-# d3 <- cbind(d3,serie=c("Tn","Tx"))
-# d3[1,3:4] <- c(-2,20)
-# d3[2,3:4] <- c(5,28)
-# 
-# plot1$layers[[3]]$data <- d3
-# plot1
 
-# ------------------------
-# Buen dibujo !!! 
-# la misma idea trate de mejorarlo ... a ver si te gusta
-una.ola <- data.frame( serie = 'Tn', xn=156, xx=160, yn=-2, yx=20 ) %>% 
-  bind_rows( data.frame( serie = 'Tx', xn=156, xx=160, yn=5, yx=28 ) )
-
-d2 %>% mutate(dia2 = yday(fecha)) %>% 
-  ggplot() + 
-  geom_hex(aes(x=dia2, y=temp) ) +  
-  geom_line(data = mutate(d1, dia2 = yday(fecha)),  aes(x=dia2,y=temp,group=serie)) +
-  geom_rect( data = una.ola, 
-             aes(xmin=xn, xmax=xx, ymin=yn , ymax=yx), 
-             alpha=0.2, color=NA, fill="red") + 
-  facet_grid(serie~., scales = 'free_y') +
-  scale_fill_gradient(name='Frequence', high = '#034e7b', low = '#f1eef6') +
-  theme_bw()
-@
+\end{knitrout}
 \textcolor{blue}{en la figura: caption con descripcion, nombres de los ejes y la etiqueta de color, nombres de los paneles}
 
 El período de días del 5 al 9 de junio de 2012 (señalado en rojo en la Figura \ref{fig:graf1}) la temperatura observada se acerca a la cola inferior de la distribución para ese día. Eso indica que ese período fue bastante más frio de lo esperado, podemos considerar que durante esos días estuvimos ante la presencia de una \textit{ola de frío}. 
@@ -356,58 +365,79 @@ Y_t&=\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,0.1^2) \\
 \end{equation}
 
 El siguiente código de  \textbf{R} realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman. 
-<<echo=TRUE>>=
-# Obtenemos estados y datos simulados
-set.seed(1237); N <- 100
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# Obtenemos estados y datos simulados}
+\hlkwd{set.seed}\hlstd{(}\hlnum{1237}\hlstd{); N} \hlkwb{<-} \hlnum{100}
 
-dd <- data_frame(t = seq(0,1, length.out = N), w = rnorm(N,0,.1), v = rnorm(N,0,.3) ) %>% 
-  mutate( theta = cumsum(w), y = ts(theta + v) )
+\hlstd{dd} \hlkwb{<-} \hlkwd{data_frame}\hlstd{(}\hlkwc{t} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,} \hlkwc{length.out} \hlstd{= N),} \hlkwc{w} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.1}\hlstd{),} \hlkwc{v} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.3}\hlstd{) )} \hlopt{%>%}
+  \hlkwd{mutate}\hlstd{(} \hlkwc{theta} \hlstd{=} \hlkwd{cumsum}\hlstd{(w),} \hlkwc{y} \hlstd{=} \hlkwd{ts}\hlstd{(theta} \hlopt{+} \hlstd{v) )}
 
-# Función para estimar varianzas por Max.Ver
-parMLE <- function(par) dlmModPoly(1, dV = par[1], dW = par[2])
-modPoly <- dlmMLE(dd$y,parm = c(1,1),build = parMLE)
+\hlcom{# Función para estimar varianzas por Max.Ver}
+\hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)} \hlkwd{dlmModPoly}\hlstd{(}\hlnum{1}\hlstd{,} \hlkwc{dV} \hlstd{= par[}\hlnum{1}\hlstd{],} \hlkwc{dW} \hlstd{= par[}\hlnum{2}\hlstd{])}
+\hlstd{modPoly} \hlkwb{<-} \hlkwd{dlmMLE}\hlstd{(dd}\hlopt{$}\hlstd{y,}\hlkwc{parm} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{1}\hlstd{),}\hlkwc{build} \hlstd{= parMLE)}
 
-# Kalman filter y Kalman smoother
-mod_filter <- dlmFilter(dd$y, parMLE(modPoly$par))
-mod_smooth <- dlmSmooth(mod_filter)
-@
+\hlcom{# Kalman filter y Kalman smoother}
+\hlstd{mod_filter} \hlkwb{<-} \hlkwd{dlmFilter}\hlstd{(dd}\hlopt{$}\hlstd{y,} \hlkwd{parMLE}\hlstd{(modPoly}\hlopt{$}\hlstd{par))}
+\hlstd{mod_smooth} \hlkwb{<-} \hlkwd{dlmSmooth}\hlstd{(mod_filter)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
 En primer lugar, es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados. 
 
 Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener estimaciones de la esperanza posterior, 
-<<>>=
-str(mod_filter, max.level = 1)
-@
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{verbatim}
+## List of 9
+##  $ y  : Time-Series [1:100] from 1 to 100: -0.18756 -0.226 0.05441 -0.00719 -0.21121 ...
+##  $ mod:List of 10
+##   ..- attr(*, "class")= chr "dlm"
+##  $ m  : Time-Series [1:101] from 0 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
+##  $ U.C:List of 101
+##  $ D.C: num [1:101, 1] 3162.278 0.289 0.211 0.184 0.172 ...
+##  $ a  : Time-Series [1:100] from 1 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
+##  $ U.R:List of 100
+##  $ D.R: num [1:100, 1] 3162.278 0.309 0.238 0.214 0.204 ...
+##  $ f  : Time-Series [1:100] from 1 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
+##  - attr(*, "class")= chr "dlmFiltered"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
 
 La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
 
-<<graf7b,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
-dd %>% 
-  select(t, y, theta) %>% 
-  mutate(filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
-  gather(tipo, estimacion, filtro, suave, pred1) %>% 
-  gather( serie, valor, -t, -tipo ) %>% 
-  ggplot(aes(x=t,y=valor,col=serie)) + geom_line() + 
-    facet_grid(tipo~.) +
-  scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
-  theme_bw()
-@
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
+
+{\centering \includegraphics[width=\maxwidth]{figure/graf7b-1} 
+
+}
+
+\caption[Ejemplo de un proceso de espacio de estado y su estimación]{Ejemplo de un proceso de espacio de estado y su estimación.}\label{fig:graf7b}
+\end{figure}
+
+
+\end{knitrout}
 las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
 
 La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
 
-<<graf7c,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", fig.height=5>>=
-dd %>% 
-  select(t, y, theta) %>% 
-  mutate(filtro = mod_filter$m[-1], suave=mod_smooth$s[-1], pred1=mod_filter$f )  %>%  
-  gather(tipo, estimacion, filtro, suave, pred1) %>% 
-  gather( serie, valor, -t, -tipo ) %>% 
-  ggplot(aes(x=t,y=valor,col=serie)) + geom_line() + 
-    facet_grid(tipo~.) +
-  scale_color_manual( values=c("theta"='black',"y"='grey','estimacion'='red')) +
-  theme_bw()
-@
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
+
+{\centering \includegraphics[width=\maxwidth]{figure/graf7c-1} 
+
+}
+
+\caption[Ejemplo de un proceso de espacio de estado y su estimación]{Ejemplo de un proceso de espacio de estado y su estimación.}\label{fig:graf7c}
+\end{figure}
+
+
+\end{knitrout}
 
 
 
@@ -416,14 +446,7 @@ dd %>%
 \newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
 \newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
 
-<<graf7,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", eval=FALSE>>=
-myguide <- guide_legend(keywidth = unit(1, "cm"))
 
-data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %>% 
-  cbind(tipo=factor(c(rep(.5,N),rep(1,N),rep(1,N)))) %>%
-  ggplot()+aes(x=t,y=valor,col=serie,alpha=tipo)+geom_line()+
-  scale_alpha_discrete(range = c(.5,1),guide=F)+scale_color_manual(values=c("theta"='#F8766F',"y"='#7CAE00',"estimacion"="#9999CC"),guide=myguide)+theme_bw()
-@
 % \vspace{-.75em}
 % \captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado y su estimación. %En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.
 % }
@@ -464,162 +487,81 @@ En este trabajo, para la estimación de tales percentiles, nos valdremos de la d
 
 Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
-<<estima.modelos, echo=T, cache=TRUE>>=
-parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = exp(par), dW = 0)
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlstd{parMLE} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{par}\hlstd{)}  \hlkwd{dlmModTrig}\hlstd{(}\hlkwc{s} \hlstd{=} \hlnum{365}\hlstd{,}\hlkwc{q}\hlstd{=}\hlnum{2}\hlstd{,} \hlkwc{dV} \hlstd{=} \hlkwd{exp}\hlstd{(par),} \hlkwc{dW} \hlstd{=} \hlnum{0}\hlstd{)}
 
-# Estima el modelo para temp Minimas
-mod.tn <- filter(d2, serie == 'Tn') %>% 
-  mutate(temp = temp-mean(temp, na.rm = T)) %>% pull(temp) %>% 
-  ts(start = c(1950, 1), frequency = 365) %>% 
-  dlmMLE( parm = 0, build= parMLE)
+\hlcom{# Estima el modelo para temp Minimas}
+\hlstd{mod.tn} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tn'}\hlstd{)} \hlopt{%>%}
+  \hlkwd{mutate}\hlstd{(}\hlkwc{temp} \hlstd{= temp}\hlopt{-}\hlkwd{mean}\hlstd{(temp,} \hlkwc{na.rm} \hlstd{= T))} \hlopt{%>%} \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+  \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
+  \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
 
-# Estima el modelo para temp Maximas
-mod.tx <- filter(d2, serie == 'Tx') %>%
-  mutate(temp = temp-mean(temp, na.rm = T)) %>% 
-  pull(temp) %>% 
-  ts(start = c(1950, 1), frequency = 365) %>% 
-  dlmMLE( parm = 0, build= parMLE)
-@
+\hlcom{# Estima el modelo para temp Maximas}
+\hlstd{mod.tx} \hlkwb{<-} \hlkwd{filter}\hlstd{(d2, serie} \hlopt{==} \hlstr{'Tx'}\hlstd{)} \hlopt{%>%}
+  \hlkwd{mutate}\hlstd{(}\hlkwc{temp} \hlstd{= temp}\hlopt{-}\hlkwd{mean}\hlstd{(temp,} \hlkwc{na.rm} \hlstd{= T))} \hlopt{%>%}
+  \hlkwd{pull}\hlstd{(temp)} \hlopt{%>%}
+  \hlkwd{ts}\hlstd{(}\hlkwc{start} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1950}\hlstd{,} \hlnum{1}\hlstd{),} \hlkwc{frequency} \hlstd{=} \hlnum{365}\hlstd{)} \hlopt{%>%}
+  \hlkwd{dlmMLE}\hlstd{(} \hlkwc{parm} \hlstd{=} \hlnum{0}\hlstd{,} \hlkwc{build}\hlstd{= parMLE)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
-<<suavizados>>=
-# obtener las olas de frio y calor
-get_wave <- function(x) {
-  # x es un vector de 0 y 1, indicando si un dia cuenta como extremo (frio o calor)
-  # hay que identificar rachas de 3 o mas lugares con x=1
-  x[is.na(x)] <- 0 # OJO !!!! 
-  zz <- rle(x) %>% 
-  lapply( as.vector ) %>% bind_cols() %>% 
-  mutate( pos2 =  1 + cumsum(lengths), nn = n() ) %>% 
-  mutate(pos = c(1, lag(pos2)[-1] ) ) %>% 
-  select(-pos2, -nn) %>% 
-  filter( values == 1, lengths > 2)
-  
-  out <- rep(0, length(x) )
-  
-  for( i in 1:nrow(zz) ) {
-    start <- zz$pos[i]; end <- start + zz$lengths[i]-1
-    out[start:end] <- i
-  }
-  out
+
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-1} 
+
 }
 
-sds_fn <- function(Slist, md) { 
-  lapply(Slist, function(x)  md$FF %*% x %*% t(md$FF ) + md$V ) %>% unlist() %>% sqrt()
-  }
 
-smooth.tn <- d2 %>% filter(serie == 'Tn') %>% pull(temp) %>% 
-  ts(start = c(1950, 1), frequency = 365) %>% 
-  dlmSmooth(  parMLE(mod.tn$par) )
 
-smooth.tx <- d2 %>% filter(serie == 'Tx') %>% pull(temp) %>% 
-  ts(start = c(1950, 1), frequency = 365) %>% 
-  dlmSmooth(  parMLE(mod.tx$par) )
 
-res.wide <- d2 %>% spread(serie, temp) %>% arrange(fecha) %>% 
-  mutate( yhat.tn = apply( smooth.tn$s[-1,], 1, function(x)  parMLE(mod.tn$par)$FF %*% x)+mean(Tn, na.rm = T),
-          yhat.tx = apply( smooth.tx$s[-1,], 1, function(x)  parMLE(mod.tx$par)$FF %*% x)+mean(Tx, na.rm = T),
-          sd.tn = sds_fn(  dlmSvd2var(smooth.tn$U.S[-1], smooth.tn$D.S[-1,]), parMLE(mod.tn$par) ),
-          sd.tx = sds_fn(  dlmSvd2var(smooth.tx$U.S[-1], smooth.tx$D.S[-1,]), parMLE(mod.tx$par) )) %>% 
-  mutate( dia.frio = as.numeric( (yhat.tx + sd.tx*qnorm(.1) > Tx) & (yhat.tn + sd.tn*qnorm(.1)) > Tn), 
-          dia.calor = as.numeric( (yhat.tx + sd.tx*qnorm(.9) < Tx) & (yhat.tn + sd.tn*qnorm(.9)) < Tn) ,
-          ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-2} 
 
-# zz <- d2 %>% filter(serie == 'Tn') %>% 
-#   mutate(mn = mean(temp, na.rm = TRUE), 
-#     yhat = apply(smooth.tn$s[-1, c(1,3)], 1, sum) + mn )
-# res.long <- d2 %>% filter(serie == 'Tx') %>% 
-#   mutate(mn = mean(temp, na.rm = TRUE), 
-#          yhat = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
-#   bind_rows(zz)
-# res.wide <- d2 %>% filter(serie == 'Tx') %>% 
-#   mutate(mn = mean(temp, na.rm = TRUE), 
-#          yhat.tx = apply(smooth.tx$s[-1, c(1,3)], 1, sum) + mn ) %>% 
-#   select( temp, fecha, yhat.tx) %>% 
-#   inner_join( select(zz,temp, fecha, yhat),  by='fecha' ) %>% 
-#   set_names(nm = c('tx', 'fecha', 'yhat.tx', 'tn', 'yhat.tn') ) %>% 
-#   mutate( dia.frio = as.numeric(yhat.tx > tx & yhat.tn > tn), 
-#           dia.calor = as.numeric(yhat.tx < tx & yhat.tn < tn ) ) %>% 
-#   mutate(ola.frio = get_wave(dia.frio), ola.calor = get_wave(dia.calor) )
-
-@
-
-<<popurri, fig.height=5 >>=
-getSeason <- function(input.date){
-  numeric.date <- 100*month(input.date)+day(input.date)
-  ## input Seasons upper limits in the form MMDD in the "break =" option:
-  cuts <- base::cut(numeric.date, breaks = c(0,319,0620,0921,1220,1231)) 
-  # rename the resulting groups (could've been done within cut(...levels=) if "Winter" wasn't double
-  #levels(cuts) <- c("Winter","Spring","Summer","Fall","Winter")
-  levels(cuts) <- c("Verano","Otoño","Invierno","Primavera","Verano")
-  return(cuts)
 }
 
-# bolazos de resumen ....   
- 
-#--
-yr <- 2007  
 
-xx.ola <- res.wide %>% 
-  select(Tn, Tx, fecha, ola.frio, ola.calor) %>% 
-  gather(tipo, ola, ola.frio, ola.calor) %>% 
-  filter(ola > 0, fecha > make_date(yr, 1, 1), fecha < make_date(yr, 12, 31))
 
-res.wide %>% 
-  filter(fecha > make_date(yr, 1, 1), fecha < make_date(yr, 12, 31) ) %>% 
-  ggplot() + 
-  geom_line(aes(fecha, Tn), color='grey' ) + geom_line(aes(fecha, Tx),color='grey' ) +
-  geom_line(aes(fecha, yhat.tn) ) + geom_line(aes(fecha, yhat.tx) ) +
-  geom_point(data = xx.ola, aes(fecha, Tn, color= tipo)) + 
-  geom_point(data = xx.ola, aes(fecha, Tx, color =tipo)) +
-  scale_color_manual(values = c('red', 'blue')) + 
-  labs(title = paste('Year', yr, sep =' : '), y = 'temperatura') + 
-  theme_bw()
-#--  
 
-res.wide %>% 
-  mutate(seas = getSeason(fecha), year = year(fecha), month = month(fecha) ) %>% 
-  filter(ola.frio > 0) %>% select(Tn, Tx, fecha, seas) %>% 
-  gather(serie, temp, Tn, Tx) %>% 
-  ggplot() + geom_point(aes(fecha, temp, color = seas) ) + facet_grid(serie~., scale = 'free_y') + 
-  labs(y = 'temperatura', color = '', title = 'Estanzuela - Olas de frio') +
-  scale_color_brewer(palette = 'Dark2')
-  
-res.wide %>% 
-  mutate(seas = getSeason(fecha), year = year(fecha), month = month(fecha) ) %>% 
-  filter(ola.calor > 0) %>% select(Tn, Tx, fecha, seas) %>% 
-  gather(serie, temp, Tn, Tx) %>% 
-  ggplot() + geom_point(aes(fecha, temp, color = seas) ) + facet_grid(serie~., scale = 'free_y') + 
-  labs(y = 'temperatura', color = '', title = 'Estanzuela - Olas de calor') +
-  scale_color_brewer(palette = 'Dark2')
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-3} 
 
-describe.olas <- res.wide %>% 
-  mutate(seas = getSeason(fecha), year = year(fecha), anoma.tn = Tn - yhat.tn, anoma.tx=Tx-yhat.tx) %>% 
-  select(seas, year, anoma.tx, anoma.tn, ola.frio, ola.calor) %>% 
-  gather(tipo, ola, ola.frio, ola.calor) %>% 
-  group_by(tipo, ola) %>% 
-  summarise(seas=first(seas), year=first(year), dura = n(), anoma.tn = mean(anoma.tn), anoma.tx=mean(anoma.tx) ) %>% 
-  filter(ola > 0)
-  
-describe.olas %>% ggplot() + 
-  geom_histogram(aes(x=dura, y=..density..) ) + facet_grid(tipo~.) +
-  labs(x = 'Duración', y = '')
+}
 
-describe.olas %>% ggplot() + 
-  geom_jitter( aes(x=dura, y = anoma.tn, color = seas), height =  0 ) + facet_grid(tipo~., scale = 'free_y') +
-  scale_color_brewer(palette = 'Dark2') +
-  labs(x = 'Duración', y = 'Anom_TN: Tx-yhat.tx')
 
-describe.olas %>% ggplot() + 
-  geom_jitter( aes(x=dura, y = anoma.tx, color = seas), height =  0 ) + facet_grid(tipo~., scale = 'free_y') +
-  scale_color_brewer(palette = 'Dark2') + 
-  labs(x = 'Duración', y = 'Anom_TX: Tx-yhat.tx')
 
-describe.olas %>% ggplot() + 
-  geom_point( aes(x=anoma.tx, y =anoma.tn, color =seas, size=dura) ) + 
-  facet_wrap(~tipo  , scale = 'free') +
-  scale_color_brewer(palette = 'Dark2') +
-  labs(x = 'Anom_TX: Tx-yhat.tx', y = 'Anom_Tn: Tn-yhat.tn')
-@
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-4} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-5} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-6} 
+
+}
+
+
+
+
+{\centering \includegraphics[width=\maxwidth]{figure/popurri-7} 
+
+}
+
+
+
+\end{knitrout}
 
 \newpage
 
