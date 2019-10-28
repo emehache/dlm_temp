@@ -332,7 +332,15 @@ Aparte de DLM, la familia de modelos espacio-estados admite modelos no lineales 
 
 Si se tienen las observaciones $y_1,\dots,y_T$, y se asume un modelo como el descripto por las ecuaciones \eqref{ecu.obs} y \eqref{ecu.evo}, hay varias distribuciones posteriores que puede ser de interes. En relacion al proceso no observable se distinguen tres distribuciones relevantes condicional en los datos observados: filtrada, suavisada y de prediccion. 
 
-La \textbf{distribucion filtrada} (filtering distribution en ingles) consiste en la distribucion posteiror del estado no observable $\theta_t$ dada la informacion observada hasta ese mismo momento, es decir $p(\theta_t | y_1, \ldots, y_t)$, se tiene una distribucion para cada momento $t$. La posterior filtrada es de principal interes en aplicaciones secuenciales donde es necesario realizar una nueva estimacion para cada observacion nueva. En el caso de modelos DLM, donde operan las restricciones de normalidad y linealidad, es posible tener soluciones cerradas para $p(\theta_t | y_1, \ldots, y_t)$ mediante el Filtro de Kalman (REF??) \textcolor{blue}{es necesario incluir las formulas de recursion para estimar esto??}
+La \textbf{distribucion filtrada} (filtering distribution en ingles) consiste en la distribucion del estado no observable $\theta_t$ dada la informacion observada hasta ese mismo momento, es decir $p(\theta_t | y_{1:t}$, se tiene una distribucion para cada momento $t$. La posterior filtrada es de principal interes en aplicaciones secuenciales donde es necesario realizar una nueva estimacion para cada observacion nueva. En el caso de modelos DLM descritos por \eqref{ecu.obs} y \eqref{ecu.evo}, donde operan las restricciones de normalidad y linealidad, es posible tener soluciones cerradas para $p(\theta_t | y_1, \ldots, y_t)$ mediante el Filtro de Kalman (REF??) \textcolor{blue}{es necesario incluir las formulas de recursion para estimar esto??}
+
+El filtro de Kalman puede verse como la resolucion recursiva de un problema de estimacion Bayesiana en el modelo lineal gaussiano, distribucion posterior de interes es 
+$p(\theta_t | y_{1:t}$
+
+Suponemos conocida la \textbf{distribucion filtrada} del paso anterior, $p(\theta_{t-1} | y_{1:t-1}) = N(m_{t-1, C_{t-1)$, y la utilizamos para obtener la distribucion previa 
+
+
+
 
 Una segunda distribucion posterior que puede tener relevancia en aplicaciones es la \textbf{distribucion suavizada} (smoothing distribution en ingles) del proceso de estados. La distribucion suavizada consiste en $p(\theta_t | y_1, \ldots, y_T)$, es similar a la posterior filtrada con la diferencia que el condicional se realiza sobre todos los datos observados disponibles. La distribucion suavizada es relevante para aplicaciones donde estamos interesados en un estudio retrospectivo y se desea analizar todo el proceso de estados latente. \textcolor{blue}{a nosotros no deberia interesarnos mas smoothing que filtering ???}
 
