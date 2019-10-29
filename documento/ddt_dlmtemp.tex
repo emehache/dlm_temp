@@ -377,14 +377,14 @@ Y_t&=\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,0.1^2) \\
 \label{dlm_sim}
 \end{equation}
  
-El siguiente código de  \textbf{R} realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman.
+El siguiente código de  \verb|R| realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
 \hlcom{# Obtenemos estados y datos simulados}
 \hlkwd{set.seed}\hlstd{(}\hlnum{1237}\hlstd{); N} \hlkwb{<-} \hlnum{100}
 
-\hlstd{dd} \hlkwb{<-} \hlkwd{data_frame}\hlstd{(}\hlkwc{t} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,} \hlkwc{length.out} \hlstd{= N),} \hlkwc{w} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.1}\hlstd{),} \hlkwc{v} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.3}\hlstd{) )} \hlopt{%>%}
+\hlstd{dd} \hlkwb{<-} \hlkwd{tibble}\hlstd{(}\hlkwc{t} \hlstd{=} \hlkwd{seq}\hlstd{(}\hlnum{0}\hlstd{,}\hlnum{1}\hlstd{,} \hlkwc{length.out} \hlstd{= N),} \hlkwc{w} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.1}\hlstd{),} \hlkwc{v} \hlstd{=} \hlkwd{rnorm}\hlstd{(N,}\hlnum{0}\hlstd{,}\hlnum{.3}\hlstd{) )} \hlopt{%>%}
   \hlkwd{mutate}\hlstd{(} \hlkwc{theta} \hlstd{=} \hlkwd{cumsum}\hlstd{(w),} \hlkwc{y} \hlstd{=} \hlkwd{ts}\hlstd{(theta} \hlopt{+} \hlstd{v) )}
 
 \hlcom{# Función para estimar varianzas por Max.Ver}
@@ -398,31 +398,12 @@ El siguiente código de  \textbf{R} realiza la simulación de un conjunto de dat
 \end{kframe}
 \end{knitrout}
 
-En primer lugar, es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados.
+En primer lugar, se debe estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados.
 
-Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener estimaciones de la esperanza posterior,
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{verbatim}
-## List of 9
-##  $ y  : Time-Series [1:100] from 1 to 100: -0.18756 -0.226 0.05441 -0.00719 -0.21121 ...
-##  $ mod:List of 10
-##   ..- attr(*, "class")= chr "dlm"
-##  $ m  : Time-Series [1:101] from 0 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
-##  $ U.C:List of 101
-##  $ D.C: num [1:101, 1] 3162.278 0.289 0.211 0.184 0.172 ...
-##  $ a  : Time-Series [1:100] from 1 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
-##  $ U.R:List of 100
-##  $ D.R: num [1:100, 1] 3162.278 0.309 0.238 0.214 0.204 ...
-##  $ f  : Time-Series [1:100] from 1 to 100: 0 -0.1876 -0.2081 -0.102 -0.0685 ...
-##  - attr(*, "class")= chr "dlmFiltered"
-\end{verbatim}
-\end{kframe}
-\end{knitrout}
-las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados.
+Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener
+las distribuciones posteriores de filtro y prediccion a un paso, asi como la funcion (\verb|dlmSmooth()|) para obtener la distribucion de suavizado de Kalman. Notemos que dado que todas estas distribucines posteriores son gausianas, alcanza con tener las estimaciones puntuales de esperanza y varianza posterior posterior para cada momento del tiempo. En particular, las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados contenida en la serie \verb|s|.
 
 La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
-
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
 
@@ -435,26 +416,39 @@ La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en c
 
 
 \end{knitrout}
-las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados.
 
-% \definecolor{theta}{HTML}{F8766F}
-% \definecolor{ye}{HTML}{7CAE00}
-% \newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
-% \newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
-% <<graf7,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", eval=FALSE>>=
-% myguide <- guide_legend(keywidth = unit(1, "cm"))
-% 
-% data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %>%
-%   cbind(tipo=factor(c(rep(.5,N),rep(1,N),rep(1,N)))) %>%
-%   ggplot()+aes(x=t,y=valor,col=serie,alpha=tipo)+geom_line()+
-%   scale_alpha_discrete(range = c(.5,1),guide=F)+scale_color_manual(values=c("theta"='#F8766F',"y"='#7CAE00',"estimacion"="#9999CC"),guide=myguide)+theme_bw()
-% @
-% \vspace{-.75em}
-% \captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado y su estimación. %En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.
-% }
-% \label{fig:graf7}
+Anteriormente, comentamos que la estimacion Bayesiana de filtros y suavizado de Kalman incorpora naturalmente la precencia de valores faltantes en la serie. En el proceso iterativo de actualizacion de $m_t$ y $C_t$ para cada nuevo dato que se considera, un valor faltante simplemnte implica que no es necesaria realizar una actualizacion, es decir $m_t = m_{t-1}$ cuando el dato $y_t$ no esta presente. En lo que sigue mostramos como el codigo para realizar la estimacion del proceso latente es el mismo en caso que la serie presente valores faltantes. 
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{# Simlar valores faltantes}
+\hlstd{falta} \hlkwb{=} \hlkwd{sample}\hlstd{(}\hlnum{1}\hlopt{:}\hlstd{N,} \hlnum{20}\hlstd{)}
+\hlstd{dd}\hlopt{$}\hlstd{yna} \hlkwb{=} \hlstd{dd}\hlopt{$}\hlstd{y}
+\hlstd{dd}\hlopt{$}\hlstd{yna[falta]} \hlkwb{<-} \hlnum{NA}
+
+\hlcom{# Ajustar modelo: estimacion por MV, filtro y suavizado de Kalman}
+\hlstd{modPoly.na} \hlkwb{<-} \hlkwd{dlmMLE}\hlstd{(dd}\hlopt{$}\hlstd{yna,}\hlkwc{parm} \hlstd{=} \hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{1}\hlstd{),}\hlkwc{build} \hlstd{= parMLE)}
+\hlstd{filter.na} \hlkwb{<-} \hlkwd{dlmFilter}\hlstd{(dd}\hlopt{$}\hlstd{yna,} \hlkwd{parMLE}\hlstd{(modPoly.na}\hlopt{$}\hlstd{par))}
+\hlstd{smooth.na} \hlkwb{<-} \hlkwd{dlmSmooth}\hlstd{(mod_filter)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+La figura \ref{fig:graf7c} es analoga a la anterior pero cuando la serie tiene valores faltantes. Unicamente se muestra el suavizado de Kalman. En este ejemplo sencillo, se ve como el modelo logra reconstruir el proceso latente en presencia de un 20\% de valores faltantes. 
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
+
+{\centering \includegraphics[width=\maxwidth]{figure/graf7c-1} 
+
+}
+
+\caption[Estimación de proceso de estados latentes en precencia de valores faltantes]{Estimación de proceso de estados latentes en precencia de valores faltantes.}\label{fig:graf7c}
+\end{figure}
 
 
+\end{knitrout}
 
 \section{Modelo estacional para el modelado de temperaturas}\label{DLMtemp}
 \textcolor{blue}{describir mas explicitamente el modelo utilizado, o sea, agregar la ecuacion de observacion, y comentar el porque y las consecuencias de usar W=0}
