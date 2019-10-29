@@ -330,18 +330,35 @@ para ver la equivalencia entre ambas representaciones, debemos operar en la segu
 Aparte de DLM, la familia de modelos espacio-estados admite modelos no lineales y el uso de otras distribuciones no Gausianas. Por ejemplo, modelos para las distribuciones de la familia exponencial pueden ser especificados para tener DLMG \textit{generalizados}, por otro lado en casos uqe el proceso de estados tenga una distribucion discreta el modelo es referido como modelos ocultos de MArkov, tambien modelos de volatilidad estocastica pueden ser vistos como espacio-estados. El estudio de DLM entonces, es relevante pues permite introucirnos al trabajo con una familia de modelos que es muy amplica y puede aplicarse en una gran variedad de problemas concretos. 
 
 
-%\begin{center}
-%$\begin{array}{lc}
-%Y_t=F_t\theta_t + v_t  &  v_t \sim \mathcal{N}(0,V_t) \\
-%\theta_t = G_t \theta_{t-1} + w_t \;\; & w_t \sim \mathcal{N}(0,W_t)
-%\end{array}$
-%\end{center}
+\begin{center}
+$\begin{array}{lc}
+Y_t=F_t\theta_t + v_t  &  v_t \sim \mathcal{N}(0,V_t) \\
+\theta_t = G_t \theta_{t-1} + w_t \;\; & w_t \sim \mathcal{N}(0,W_t)
+\end{array}$
+\end{center}
 
 \subsection{Estimacion del proceso de estados}
 
-Si se tienen las observaciones $y_1,\dots,y_T$, y se asume un modelo como el descripto por las ecuaciones \eqref{ecu.obs} y \eqref{ecu.evo}, hay varias distribuciones posteriores que puede ser de interes. En relacion al proceso no observable se distinguen tres distribuciones relevantes condicional en los datos observados: filtrada, suavisada y de prediccion. 
+Si se tienen las observaciones $y_1,\dots,y_T$, y se asume un modelo como el descripto por las ecuaciones \eqref{ecu.obs} y \eqref{ecu.evo}, hay varias distribuciones posteriores que puede ser de interes. En relacion al proceso no observable se distinguen tres distribuciones relevantes condicional en los datos observados: filtrada, suavisada y de prediccion.
 
-La \textbf{distribucion filtrada} (filtering distribution en ingles) consiste en la distribucion posteiror del estado no observable $\theta_t$ dada la informacion observada hasta ese mismo momento, es decir $p(\theta_t | y_1, \ldots, y_t)$, se tiene una distribucion para cada momento $t$. La posterior filtrada es de principal interes en aplicaciones secuenciales donde es necesario realizar una nueva estimacion para cada observacion nueva. En el caso de modelos DLM, donde operan las restricciones de normalidad y linealidad, es posible tener soluciones cerradas para $p(\theta_t | y_1, \ldots, y_t)$ mediante el Filtro de Kalman (REF??) \textcolor{blue}{es necesario incluir las formulas de recursion para estimar esto??}
+La \textbf{distribucion filtrada} (filtering distribution en ingles) consiste en la distribucion del estado no observable $\theta_t$ dada la informacion observada hasta ese mismo momento, es decir $p(\theta_t | y_{1:t}$, se tiene una distribucion para cada momento $t$. La posterior filtrada es de principal interes en aplicaciones secuenciales donde es necesario realizar una nueva estimacion para cada observacion nueva. 
+
+En el caso de modelos DLM descritos por \eqref{ecu.obs} y \eqref{ecu.evo}, donde operan las restricciones de normalidad y linealidad, es posible tener soluciones cerradas para $p(\theta_t | y_1, \ldots, y_t)$ mediante el Filtro de Kalman. El filtro de Kalman puede verse como la resolucion recursiva de un problema de estimacion Bayesiana en el modelo lineal gaussiano, distribucion posterior de interes es $p(\theta_t | y_{1:t} )$, que se obtiene como
+\[
+p(\theta_t | y_{1:t}) = \frac{ p(y_t | \theta_t) p(\theta_{t} | y_{1:t-1})}{ p(y_t | y_{1:t}  }
+\]
+En primer lugar, suponemos conocida la distribucion filtrada del paso anterior, $p(\theta_{t-1} | y_{1:t-1}) = N(m_{t-1}, C_{t-1})$. Luego, como la ecuacion \eqref{ecu.evo} implica que $ p(\theta_{t} | \theta_{t-1} = N(G_t\theta_{t-1}, W_t)$ se puede obtener la distribucion previa $p(\theta_{t} | y_{1:t-1}$ como en \eqref{ecu.previa}. Es simple mostrar que el resultado es que la previa para el estado $\theta_t$ es normal, $\theta_t |y_{1:t-1} \sim N(a_t, R_t)$, donde $a_t = G_tm_{t-1}$ y $R_t = G_t C_{t-1} G_t^{\top} + W_t$. 
+\begin{equation}
+p(\theta_{t} | y_{1:t-1})  \int  p(\theta_{t} | \theta_{t-1}) p( \theta_{t-1}|y_{1:t-1}) d\theta_{t-1} \\
+\label{ecu.previa}
+\end{equation}
+
+Por otro lado, la verosimilitud $p(y_t | \theta_t)$ es tambien normal, esto surge directamente de \eqref{ecu.obs} en que se explicita que $y_t | \theta_t \sim N(F_t \theta_t, V_t)$. Con estos ingredientes, modelo de datos y previa gaussianas, podemos obtener la posterior de interees aplicadndo resultados conocidos de modelo de regresion lineal conjugado para obtener el resultado del filtro de Kalman como 
+\[\begin{array}{ccc}
+\theta_t | y_{1:t} \sim N(m_t, C_t) & m_t = C_t( R_t^{-1}a_t + F_t^{\top}V_t^{-1}y_t ) & C_t = (R_t^{-1} + F_t^{\top}V_t^{-1}F_t)^{-1}
+\end{array}
+\]
+Utilizando la previa normal para el momento inicial ($\theta_0$) se procede iterativamente para obtener la distribucion filtrada para todos los estados latentes $\theta_1$ a $\theta_T$. 
 
 Una segunda distribucion posterior que puede tener relevancia en aplicaciones es la \textbf{distribucion suavizada} (smoothing distribution en ingles) del proceso de estados. La distribucion suavizada consiste en $p(\theta_t | y_1, \ldots, y_T)$, es similar a la posterior filtrada con la diferencia que el condicional se realiza sobre todos los datos observados disponibles. La distribucion suavizada es relevante para aplicaciones donde estamos interesados en un estudio retrospectivo y se desea analizar todo el proceso de estados latente. \textcolor{blue}{a nosotros no deberia interesarnos mas smoothing que filtering ???}
 
@@ -351,7 +368,7 @@ En caso que estemos interesados en predecir un valor futuro del estado se utiliz
 
 \textcolor{blue}{Incluir tratamiento de datos faltantes, caapz que para que se entienda son necesarias incluir formulas para calcular filtering y smoothing}
 
-
+ 
 \subsection{Un ejemplo simulado \label{implementacionR} }
 %\subsection{Implementación computacional en \textbf{R}}\label{implementacionR}
 En lo que sigue se ilustra la estimación de DLM mediante un ejemplo simulado de un proceso simple y su estimación mediante la biblioteca \verb|dlm| (CITA??) que permite trabajar con toda la familia de modelos lineales dinámicos. La ecuación \eqref{dlm_sim} muestra el modelo usado para simular datos,  en este caso $G_t$ y $F_t$ se definieron constantes con valor 1. El proceso de estado $\{\theta_t\}$ describe un paseo al azar, mientras que podemos considerar a $\{y_t\}$ como una observación ruidosa de $\{\theta_t\}$. El objetivo será recumerar los valores de los parámetros de varianzas y el proceso de estado. \textcolor{blue}{notar que no es estacionario...}
@@ -363,8 +380,8 @@ Y_t&=\theta_t + v_t  \;&\;  v_t \sim \mathcal{N}(0,0.1^2) \\
 \end{aligned}
 \label{dlm_sim}
 \end{equation}
-
-El siguiente código de  \textbf{R} realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman. 
+ 
+El siguiente código de  \textbf{R} realiza la simulación de un conjunto de datos con el modelo descrito en \eqref{dlm_sim} y su estimación con el Filtro del Kalman.
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{alltt}
@@ -385,9 +402,9 @@ El siguiente código de  \textbf{R} realiza la simulación de un conjunto de dat
 \end{kframe}
 \end{knitrout}
 
-En primer lugar, es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados. 
+En primer lugar, es estimar los parámetros desconocidos del modelo con la función \verb|dlmMLE()|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE()|), cuyo argumento sea un vector de valores iniciales propuesto para los parámetros que se desea estimar, en nuestro caso desconocemos $V_t$ y $W_t$, la varianza del ruido de evolución y la varianza del ruido de observación. El objeto \verb|modPoly| contiene el modelo con los parámetros estimados.
 
-Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener estimaciones de la esperanza posterior, 
+Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|dlmFilter()|) para obtener estimaciones de la esperanza posterior,
 \begin{knitrout}
 \definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
 \begin{verbatim}
@@ -406,7 +423,7 @@ Una vez estimado el modelo, podemos aplicar el filtro de Kalman mediante (\verb|
 \end{verbatim}
 \end{kframe}
 \end{knitrout}
-las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
+las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados.
 
 La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
 
@@ -422,7 +439,7 @@ La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en c
 
 
 \end{knitrout}
-las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados. 
+las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados.
 
 La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
 
@@ -473,7 +490,7 @@ S_2^*:=& -a_2\sin\left(\frac{4\pi t}{365}\right) + b_2 \cos\left(\frac{4\pi t}{3
 La matriz $G_t$ (constante en $t$) será una matriz diagonal por bloques, cuyos dos bloques serán matrices de rotación de ángulos horarios $\frac{2\pi}{365}$ y $\frac{4\pi}{365}$. La matriz $W_t$ se definió nula. La varianza observacional $V_t$ será estimada por máxima verosimilitud.
 
 \subsection{Estimación de percentiles}
-\textcolor{blue}{modificar esto para usar kalman smoother} 
+\textcolor{blue}{modificar esto para usar kalman smoother}
 
 Como se explicó anteriormente, para caracterizar olas de frío debemos estimar los percentiles 10 de temperaturas mínimas y máximas para cada día del año. Tenemos las series temporales de los datos de mínima y máxima, a escala diaria, desde el 1-Enero de 1950 hasta el 10-Octubre de 2014, por tanto para cada día del año (del 1-Enero al 31-Diciembre) tenemos más de sesenta observaciones de temperaturas. Esto da para cada día del año una distribución de temperaturas.  %Un acercamiento a este problema se puede ver en {\color{red}[referencia a Santiago]} donde se computa el percentil empírico para cada día del año y luego, a la serie de percentiles, se le aplica un filtro de medias móviles con una ventana de 31 días para obtener una estimación suave.
 
@@ -483,7 +500,7 @@ En este trabajo, para la estimación de tales percentiles, nos valdremos de la d
 \section{Resultados}
 \textcolor{blue}{por ahora aca hay dibujos para mostrarle a Santiago...}
 
-% El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de 
+% El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de
 
 Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
@@ -568,14 +585,14 @@ Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente p
 El objeto \verb|Tn.filter$m| tendrá la estimación.
 % Lo primero es estimar la varianza observacional con la función \verb|dlmMLE|, que aproximará una estimación óptima, con un algoritmo iterativo. Para ello, primero debemos crear una función auxiliar (\verb|parMLE|), cuyo argumento sea un valor inicial propuesto para el parámetro, que retorne un objeto de la clase \verb|dlm|, en este caso de la familia de modelos trigonométricos, donde la frecuencia es 365. Le especificamos que mantenga 2 armónicos y descarte el resto:\\
 % \verb|parMLE <- function(par)  dlmModTrig(s = 365,q=2, dV = par, dW = 0)|
-% 
+%
 % La función \verb|dlmMLE| devolverá el modelo, con el/los parámetros estimados:\\
 % \verb|mod<- dlmMLE(y,parm = 16,build= parMLE)|
-% 
+%
 % Una vez estimado el modelo, podemos aplicar el filtro de Kalman (\verb|dlmFilter|) para obtener estimaciones de la esperanza \textit{a posteriori}:\\
 % \verb|Tn.filter <- dlmFilter(y,parMLE(mod$par))|
- 
-El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de 
+
+El paquete \verb|dlm| permite trabajar con toda la familia de modelos lineales dinámicos. %La función \verb|dlmMoTrig| nos permite crear objetos \verb|dlm| de
 
 Si el objeto \verb|y| contiene una de las series de temperaturas, el siguiente programa nos dará la estimación del modelo.
 
@@ -598,33 +615,33 @@ En la figura \ref{fig:graf6} se muestra en un período de tres años, las series
 % \captionof{figure}{Gráfico de mínimas y máximas del 1966 al 1969, y la estimación del valor esperado del proceso, mediante el filtro de Kalman}
 % \label{fig:graf6}
 % \end{center}
-% 
+%
 % \begin{center}
 % \includegraphics[width=.4\textwidth,height=21em]{graf4.png}
 % \captionof{figure}{Mínimas y máximas del 1966 al 1969, percentiles 10, y olas de frío detectadas}
 % \label{fig:graf4}
 % \end{center}
-% 
+%
 % \begin{scriptsize}
 % \begin{center}
 % \begin{tabular}{lrrrr}
 %   \hline
-% Fecha & Mín & Máx & p10 mín & p10 máx \\ 
+% Fecha & Mín & Máx & p10 mín & p10 máx \\
 %   \hline
-% 1967-06-09 & 5.40 & 3.14 & 15.50 & 11.25 \\ 
-%   1967-06-10 & -0.30 & 3.08 & 10.20 & 11.19 \\ 
-%   1967-06-11 & 1.50 & 3.03 & 7.40 & 11.12 \\ 
-%   1967-06-12 & -0.90 & 2.97 & 4.90 & 11.06 \\ 
-%   1967-06-13 & -3.70 & 2.92 & 5.30 & 11.00 \\ 
-%   1967-06-14 & -4.40 & 2.86 & 7.20 & 10.94 \\ 
-%   1967-06-15 & -3.00 & 2.81 & 8.80 & 10.88 \\ 
-%   1967-06-16 & 3.90 & 2.77 & 12.30 & 10.83 \\ 
+% 1967-06-09 & 5.40 & 3.14 & 15.50 & 11.25 \\
+%   1967-06-10 & -0.30 & 3.08 & 10.20 & 11.19 \\
+%   1967-06-11 & 1.50 & 3.03 & 7.40 & 11.12 \\
+%   1967-06-12 & -0.90 & 2.97 & 4.90 & 11.06 \\
+%   1967-06-13 & -3.70 & 2.92 & 5.30 & 11.00 \\
+%   1967-06-14 & -4.40 & 2.86 & 7.20 & 10.94 \\
+%   1967-06-15 & -3.00 & 2.81 & 8.80 & 10.88 \\
+%   1967-06-16 & 3.90 & 2.77 & 12.30 & 10.83 \\
 %    \hline
 % \end{tabular}
 % \captionof{table}{Mínimas, máximas y percentiles 10 de mínimas y máximas, en ocasión de ola de frío detectada, desde el 10 al 16 de junio de 1967, }
 % \end{center}
-% \end{scriptsize}
-
+% % \end{scriptsize}
+% 
 
 \textbf{Palabras clave}:  
 \textbf{C\'ODIGOS JEL}: 
