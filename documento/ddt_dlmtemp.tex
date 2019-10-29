@@ -360,13 +360,9 @@ Por otro lado, la verosimilitud $p(y_t | \theta_t)$ es tambien normal, esto surg
 \]
 Utilizando la previa normal para el momento inicial ($\theta_0$) se procede iterativamente para obtener la distribucion filtrada para todos los estados latentes $\theta_1$ a $\theta_T$. 
 
-Una segunda distribucion posterior que puede tener relevancia en aplicaciones es la \textbf{distribucion suavizada} (smoothing distribution en ingles) del proceso de estados. La distribucion suavizada consiste en $p(\theta_t | y_1, \ldots, y_T)$, es similar a la posterior filtrada con la diferencia que el condicional se realiza sobre todos los datos observados disponibles. La distribucion suavizada es relevante para aplicaciones donde estamos interesados en un estudio retrospectivo y se desea analizar todo el proceso de estados latente. \textcolor{blue}{a nosotros no deberia interesarnos mas smoothing que filtering ???}
+Una segunda distribucion posterior que puede tener relevancia en aplicaciones es la \textbf{distribucion suavizada} (smoothing distribution en ingles) del proceso de estados. La distribucion suavizada consiste en $p(\theta_t | y_1, \ldots, y_T)$, es similar a la posterior filtrada con la diferencia que el condicional se realiza sobre todos los datos observados disponibles. La distribucion suavizada es relevante para aplicaciones donde estamos interesados en un estudio retrospectivo y se desea analizar todo el proceso de estados latente. Finalmente, en caso que estemos interesados en predecir un valor futuro del estado se utilizan distribuciones de prediccion $p(\theta_{t+k} | y_1, \ldots, y_t)$. Para obtener las distribuciones posteriores de suavizado y prediccion se utilizan recursiones similares a las descritas arriba para el filtro de Kalman. 
 
-\textcolor{blue}{estimacion de los parametros de varianza? MLE.. otra forma?}
-
-En caso que estemos interesados en predecir un valor futuro del estado se utilizan distribuciones de prediccion $p(\theta_{t+k} | y_1, \ldots, y_t)$. \textcolor{blue}{expandir y comentar sobre predictiva de observaciones}
-
-\textcolor{blue}{Incluir tratamiento de datos faltantes, caapz que para que se entienda son necesarias incluir formulas para calcular filtering y smoothing}
+Para finalizar con la descripcion de como estimar modelos del tipo de las ecuaciones \eqref{ecu.obs} y \eqref{ecu.evo}, se comentan dos aspectos adicionales: la estiamcion de los hiperparametros y el tratamiento de datos faltantes. La aplicacion del filtro de Kalman y su adaptacion para obtener posteriores de suavizado y prediccion como fue descrito arriba supone \textbf{conocidas} las matrices de varianza $V_t$ y $W_t$. En la practica, obviamente es necesario estimarlas. Hay varias opciones para hacer esta estimacion, se puede incorporar una distribucion previa y realizar una estimacion Bayesiana o maximizar la verosimilitud marginal integrando el efecto de $\theta_t$. Ambas alternativas pueden ser muy costosas computacionalmente cuando hay muchos datos. El otro aspecto que es importante destacar es que los modelos DLM incoporan \textit{naturalmente} el tratamiento de datos faltantes. Por ejemplo, en el caso de la distribucion filtrada, $\theta_t|y_{1:t} \sim N(m_t, C_t)$, supongamos que el dato $y_t$ no se encuentra disponible, entonces no hay informacion nueva en la que condicionar, $p(\theta_t|y_{1:t}) = p(\theta_t|y_{1:t-1})$, es decir la distribucion de $\theta_t$ antes de observar el dato $y_t$ y su posterior son iguales. 
 
  
 \subsection{Un ejemplo simulado \label{implementacionR} }
@@ -441,29 +437,18 @@ La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en c
 \end{knitrout}
 las series de tiempo \verb|m|, \verb|a| y \verb|f| contienen la estimación del estado, la predicción del estado a un paso y la predicción de las observaciones a un paso, respectivamente. Adicionalmente, la función \verb|dlmSmooth()| aplica el suavizado de Kalman y nos devuelve la estimación suavizada del proceso de estados.
 
-La figura \ref{fig:graf7b} muestra los resultados de la estimación modelo, en cada panel se muestran los datos observados (serie gris), el verdadero valor del estado $\theta_t$ (serie negra) y una una estimación del modelo (serie roja). Los tres tipos de estimación comentados previamente corresponden a cada panel de la figura, en el panel superior se muestra la estimación filtrada que utiliza datos hasta el momento en que se quiere estimar, es decir $m_t = E(\theta_t | y_1,\ldots, y_t)$. El panel intermedio muestra la predicción a un paso del proceso de observación, $f_t = E(y_t | y_1, \ldots, y_{t-1})$, y finalmente, el en el panel inferior se muestra la esitmación suavizada del estados, utilizando toda la información disponible para obtenerla, es decir $s_t = E(\theta_t | y_1, \ldots, y_N)$
-
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{figure}
-
-{\centering \includegraphics[width=\maxwidth]{figure/graf7c-1} 
-
-}
-
-\caption[Ejemplo de un proceso de espacio de estado y su estimación]{Ejemplo de un proceso de espacio de estado y su estimación.}\label{fig:graf7c}
-\end{figure}
-
-
-\end{knitrout}
-
-
-
-\definecolor{theta}{HTML}{F8766F}
-\definecolor{ye}{HTML}{7CAE00}
-\newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
-\newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
-
-
+% \definecolor{theta}{HTML}{F8766F}
+% \definecolor{ye}{HTML}{7CAE00}
+% \newcommand{\thetaline}{\raisebox{2pt}{\tikz{\draw[-,theta,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
+% \newcommand{\yeline}{\raisebox{2pt}{\tikz{\draw[-,ye,-,line width = 0.9pt](0,0) -- (5mm,0); }}\;}
+% <<graf7,fig.cap="Ejemplo de un proceso de espacio de estado y su estimación.", eval=FALSE>>=
+% myguide <- guide_legend(keywidth = unit(1, "cm"))
+% 
+% data.frame(t,y,theta,estimacion=mod_filter$m[-1])  %>%  gather(serie,valor,-t) %>%
+%   cbind(tipo=factor(c(rep(.5,N),rep(1,N),rep(1,N)))) %>%
+%   ggplot()+aes(x=t,y=valor,col=serie,alpha=tipo)+geom_line()+
+%   scale_alpha_discrete(range = c(.5,1),guide=F)+scale_color_manual(values=c("theta"='#F8766F',"y"='#7CAE00',"estimacion"="#9999CC"),guide=myguide)+theme_bw()
+% @
 % \vspace{-.75em}
 % \captionof{figure}[Ejemplo de un proceso de espacio de estado]{Ejemplo de un proceso de espacio de estado y su estimación. %En \thetaline se representa el proceso \textit{no-observable}, en \yeline se representa su observación.
 % }
